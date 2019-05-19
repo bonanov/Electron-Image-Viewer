@@ -22,7 +22,7 @@ const getFileSize = async dir => {
   return { ...fileSize };
 };
 
-export const handleResizeImage = async (path, fileProps) => {
+export const handleResizeImage = async path => {
   const { innerHeight: height, innerWidth: width } = window;
   const { base64, err } = await resizeImageMain(path, { width, height });
   if (!err) return base64;

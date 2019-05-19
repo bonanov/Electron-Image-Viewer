@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import { toast } from 'react-toastify';
+import { formatPath } from '../utils/base';
 
 const { remote, nativeImage } = window.electron;
 
-class Image extends Component {
+class ImageContainer extends Component {
   state = {
     translateX: 0,
     translateY: 0,
     scale: 1,
+    zoomMode: 1,
   };
 
   imageEl = null;
@@ -53,20 +55,19 @@ class Image extends Component {
   };
 
   render() {
-    const { path, zoomMode, base64 } = this.props;
+    const { path, base64 } = this.props;
+    const { onRef } = this.props;
+    const { zoomMode } = this.state;
     const zoomFit = zoomMode === 1;
     const style = this.getStyle();
     const noScale = style.scale <= 1;
-    const src = base64 && (zoomFit || noScale) ? base64 : path;
+    const src = base64 && (zoomFit || noScale) ? base64 : formatPath(path);
+    // const src = base64 || formatPath(path);
     return (
       <div className="image-container">
         <div style={{ ...style }} className="image">
-          {path && (
-            <img
-              ref={ref => (this.imageEl = ref)}
-              className="image-inner"
-              src={src}
-            />
+          {src && (
+            <img ref={ref => onRef(ref)} className="image-inner" src={src} />
           )}
         </div>
       </div>
@@ -74,4 +75,4 @@ class Image extends Component {
   }
 }
 
-export default Image;
+export default ImageContainer;

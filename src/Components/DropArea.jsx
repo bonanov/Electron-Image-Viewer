@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { toast } from '../../node_modules/react-toastify';
-import { fileTypes } from '../constants/fileTypes';
+import { FILE_TYPES, SUPPORTED_EXTENSIONS } from '../constants/fileTypes';
 import { FILE_EXT } from '../constants/base';
 
 const { remote } = window.electron;
@@ -50,18 +50,101 @@ class DropArea extends Component {
 
     const { files, items } = e.dataTransfer;
     const firstItem = items[0];
-    if (!firstItem) return;
-    // const entry = firstItem.webkitGetAsEntry();
-    // const isDirectory = entry.isDirectory;
-    // if (isDirectory) {
-    //   this.handleDirectoryDrop(entry);
-    //   return;
-    // }
+    const droppedText = e.dataTransfer.getData('text');
+    // console.log(droppedText);
+    if (droppedText) {
+      this.onTextDrop(droppedText);
+      return;
+    }
 
+    if (!firstItem) return;
     if (files.length) {
       this.handleFiles(files);
     }
   };
+
+  // lastModified: 1558258963115
+  // lastModifiedDate: Sun May 19 2019 12:42:43 GMT+0300 (Moscow Standard Time) {}
+  // name: "D65bMw-VsAEaVto.jpg"
+  // path: "/mnt/hdd_1tb/Other/Images/Girls/WJSN/Jiyeon/WJ Stay/D65bMw-VsAEaVto.jpg"
+  // size: 241370
+  // type: "image/jpeg"
+
+  handleFiles = files => {
+    const { onDrop } = this.props;
+    const fileList = {
+      list: [],
+      dir: '',
+      handleDir: true,
+    };
+
+    [...files].forEach(file => {
+      const fileObject = this.formatFileObject(file);
+      if (!fileObject) return;
+      fileList.list.push(fileObject);
+    });
+
+    const firstFile = fileList.list[0];
+    if (!firstFile) {
+      toast.error('No supported files found');
+    }
+
+    fileList.dir = firstFile.dir;
+    if (fileList.list.length > 1) {
+      fileList.handleDir = false;
+    }
+    onDrop(fileList);
+  };
+
+  isSupportedType = type => !!FILE_TYPES.includes(type);
+
+  formatFileObject = file => {
+    const dir = file.path.replace(file.name, '');
+    const type = file.type.replace('image/', '');
+    // const supportedFile = this.isSupportedType(type);
+    // if (!supportedFile) return;
+    const fileObject = {
+      fileName: file.name,
+      fullPath: file.path,
+      url: '',
+      dir,
+      type,
+      size: file.size,
+      lastModified: file.lastModified,
+      isUrl: false,
+    };
+
+    return fileObject;
+  };
+
+  formatUrlObject = file => {
+    const dir = file.path.replace(file.name, '');
+    const fileObject = {
+      filename: file.name,
+      fullPath: '',
+      url: file.url,
+      dir,
+      type: file.type,
+      size: '',
+      lastModified: '',
+      isUrl: true,
+    };
+
+    return fileObject;
+  };
+
+  // onTextDrop = text => {
+  //   const { onLinkDrop } = this.props;
+  //   const isSupportedType = text.match(SUPPORTED_EXTENSIONS);
+  //   const type = isSupportedType[0];
+  //   if (type) {
+  //     onLinkDrop(text);
+  //     return;
+  //     this.handleTextDrop(type);
+  //   }
+  // };
+
+  // handleTextDrop = type => {};
 
   handleDirectoryDrop = item => {
     const dirReader = item.createReader();
@@ -75,42 +158,6 @@ class DropArea extends Component {
 
       this.handleFiles(files);
     });
-    // fs.readdir(item, (err, fileList) => {
-    //   if (err) return toast.error(err);
-
-    //   const newList = fileList.find(f =>
-    //     fileTypes.includes(f.replace(FILE_EXT, '$1'))
-    //   );
-    //   const firstElement = newList[0];
-    //   const dirReader = item.createReader();
-    //   dirReader.readEntries(function(entries) {
-    //     for (let i = 0; i < entries.length; i++) {
-    //       traverseFileTree(entries[i], item + item.name + '/');
-    //     }
-    //   });
-    //   if (firstElement) {
-    //     this.handleFiles(firstElement);
-    //   }
-    // });
-  };
-
-  handleFiles = files => {
-    const { onDrop } = this.props;
-    const file = files[0];
-
-    // Accept only "image" prefix
-    const prefix = /.*\//;
-    console.log(file);
-    let fileList = [];
-    fileList = [...files].filter(f =>
-      fileTypes.includes(f.type.replace(prefix, '.'))
-    );
-
-    // type = type.replace(prefix, '.');
-    // const acceptableType = fileTypes.includes(type);
-    // if (!acceptableType) return toast.error('Not acceptable file');
-    if (!fileList.length) return toast.error('Not acceptable file');
-    onDrop(fileList);
   };
 
   render() {
