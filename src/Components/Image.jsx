@@ -1,44 +1,19 @@
 import React, { Component } from 'react';
 import { toast } from 'react-toastify';
+import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
-
-const { remote, nativeImage } = window.electron;
+import * as types from '../constants/actionTypes.js';
 
 class ImageContainer extends Component {
-  state = {
-    translateX: 0,
-    translateY: 0,
-    scale: 1,
-    zoomMode: 1,
-  };
-
   imageEl = null;
 
-  componentDidMount() {
-    document.addEventListener('wheel', this.handleWheel);
-  }
-
-  handleWheel = e => {
-    const { scale } = this.state;
-    const delta = e.deltaY > 0 ? -1 : 1;
-    this.handleZoom({ delta });
-  };
-
-  handleZoom = ({ delta, initialScale }) => {
-    const { onZoomModeChange, zoomMode } = this.props;
-    let { scale } = this.state;
-    if (zoomMode !== 0) scale = 1;
-    const scaleNew = initialScale || scale + 0.1 * delta * Math.exp(scale / 4);
-    if (scaleNew < 0.1) return;
-    if (scaleNew > 15) return;
-    const scaleFixed = Number(scaleNew.toFixed(2));
-    onZoomModeChange(0);
-    this.setState({ scale: scaleFixed });
-  };
-
   getStyle = () => {
-    const { scale } = this.state;
-    const { width, height, zoomMode } = this.props;
+    const { viewModes, fileSystem } = this.props;
+    const { scale, zoomMode } = viewModes;
+    const { fileProps } = fileSystem.currentFile;
+    if (!fileProps) return;
+    const { width, height } = fileProps;
+    if (!width) return;
     let scaleValue;
     if (zoomMode === 0) scaleValue = scale;
     if (zoomMode === 1) scaleValue = 1;
@@ -55,19 +30,27 @@ class ImageContainer extends Component {
   };
 
   render() {
-    const { path, base64 } = this.props;
-    const { onRef } = this.props;
-    const { zoomMode } = this.state;
-    const zoomFit = zoomMode === 1;
+    const { fileSystem, viewModes } = this.props;
+    // const { fullPath, base64 } = fileSystem.currentFile;
+
+    const { currentPosition, fileList, base64 } = fileSystem;
+    const currentFile = fileList[currentPosition];
+    if (!currentFile) return null;
+    const { fullPath } = currentFile;
+
+    const zoomFit = viewModes.zoomMode === 1;
     const style = this.getStyle();
-    const noScale = style.scale <= 1;
-    const src = base64 && (zoomFit || noScale) ? base64 : formatPath(path);
-    // const src = base64 || formatPath(path);
+    const noScale = viewModes.scale <= 1;
+    const src = base64 && (zoomFit || noScale) ? base64 : formatPath(fullPath);
     return (
       <div className="image-container">
         <div style={{ ...style }} className="image">
           {src && (
-            <img ref={ref => onRef(ref)} className="image-inner" src={src} />
+            <img
+              ref={ref => (this.imageEl = ref)}
+              className="image-inner"
+              src={src}
+            />
           )}
         </div>
       </div>
@@ -75,4 +58,17 @@ class ImageContainer extends Component {
   }
 }
 
-export default ImageContainer;
+const mapStateToProps = state => ({
+  viewModes: state.viewModes,
+  fileSystem: state.fileSystem,
+});
+
+const mapDispatchToProps = {
+  setZoomFree: () => ({ type: types.ZOOM_FREE }),
+  setZoomFit: () => ({ type: types.ZOOM_FIT }),
+  setZoomExpand: () => ({ type: types.ZOOM_EXPAND }),
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ImageContainer);

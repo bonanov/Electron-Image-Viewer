@@ -19,10 +19,10 @@ class ControlPanel extends Component {
   };
 
   getRandomIcon = () => {
-    const { randomMode, onRandomModeChange } = this.props;
+    const { randomMode, onToggleShuffle } = this.props;
     const classes = `control random-mode ${randomMode ? 'random-enabled' : ''}`;
     return (
-      <span title="Shuffle" onClick={onRandomModeChange} className={classes}>
+      <span title="Shuffle" onClick={onToggleShuffle} className={classes}>
         <i className="fa fa-random" />
       </span>
     );

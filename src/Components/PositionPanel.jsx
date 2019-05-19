@@ -5,7 +5,9 @@ class PositionPanel extends Component {
 
   render() {
     const { amount, currentPosition, hidden } = this.props;
-    const position = `${currentPosition + 1 || 0} / ${amount + 1 || 0}`;
+    let position = '0/0';
+    if (amount) position = `${currentPosition + 1 || 0} / ${amount || 0}`;
+
     const hiddenClasses = hidden ? 'panel-hidden' : 'panel-visible';
     return (
       <div

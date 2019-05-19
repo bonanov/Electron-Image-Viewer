@@ -1,265 +1,109 @@
 import React, { Component } from 'react';
 
-import { throttle } from 'lodash';
-import { ToastContainer, toast } from 'react-toastify';
-
+import { toast } from 'react-toastify';
+import { connect } from 'react-redux';
+import { cloneDeep } from 'lodash';
+import * as types from '../constants/actionTypes';
 import 'react-toastify/dist/ReactToastify.css';
-import { HIDE_TIMEOUT, CONTROL_PANEL_SEL } from '../constants/base';
-import ControlPanel from './ControlPanel';
-import ImagePreloader from './ImagePreloader';
-import PositionPanel from './PositionPanel';
 import DropArea from './DropArea';
-import { getFileProps, handleResizeImage } from '../utils/imageProcessing';
-import {
-  shuffle,
-  getFullPath,
-  destructFilePath,
-  formatPath,
-} from '../utils/base';
-import ImageContainer from './Image';
+import { shuffleFunc } from '../utils/base';
 import { FILE_TYPES, FILE_EXT } from '../constants/fileTypes';
 import FileHandler from './FileHandler';
 // import FilesHandler from './FilesHandler';
 import GUI from './GUI';
 
-const { remote, nativeImage } = window.electron;
+const { remote } = window.electron;
 const fs = remote.require('fs');
-const path = remote.require('path');
-const gm = window.gm;
-const sharp = window.sharp;
-const { argv } = remote.process;
-
-const { NODE_ENV } = process.env;
 
 class FSInterface extends Component {
   constructor() {
     super();
-    this.state = {
-      amount: 0,
-      currentFile: {},
-      currentPosition: 0,
-      dirName: '',
-      dir: '',
-      fileName: '',
-      fullPath: '',
-      hidden: false,
-      base64: '',
-      zoomMode: 1,
-      fileList: [],
-      randomMode: false,
-      fileProps: {
-        width: 0,
-        height: 0,
-      },
-    };
 
-    // this.imageEl = null;
-    this.fileListTemp = [];
+    this.fileList = [];
+    this.imageEl = null;
     this.updating = false;
-    this.resizeImage_ = throttle(this.resizeImage, 300);
     this.timer = null;
     this.hideTimer = null;
   }
 
   componentDidMount() {
-    this.initializeArguments();
-    document.addEventListener('keydown', this.handleKey);
-    window.addEventListener('resize', this.resizeImage_);
-    document.addEventListener('mousemove', this.handleMouseMove);
-    document.addEventListener('mouseleave', this.handleMouseLeave);
-    this.hideTimer = setTimeout(() => {
-      this.setState({ hidden: true });
-    }, HIDE_TIMEOUT);
+    // this.initializeArguments();
   }
 
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleKey);
-    window.removeEventListener('resize', this.resizeImage_);
-    document.removeEventListener('mousemove', this.handleMouseMove);
-    document.removeEventListener('mouseleave', this.handleMouseLeave);
-  }
+  // initializeArguments = async () => {
+  // const isDirectory = arg => fs.lstatSync(arg).isDirectory();
 
-  handleMouseLeave = () => {
-    this.setState({ hidden: true });
-  };
+  //   const dirExist = dir => fs.existsSync(dir);
+  //   const isFile = arg => fs.lstatSync(arg).isFile();
+  //   const dev = NODE_ENV === 'development';
+  //   argv.forEach(async (ar, i) => {
+  //     const existD = await dirExist(ar);
+  //     if (!existD) return;
+  //     const existF = await isFile(ar);
+  //     if (!existF) return;
 
-  handleMouseMove = e => {
-    const { target } = e;
-    this.handlePanelsHide(target);
-  };
-
-  handlePanelsHide = target => {
-    const { hidden } = this.state;
-    clearTimeout(this.hideTimer);
-
-    if (hidden) {
-      this.setState({ hidden: false });
-    }
-
-    if (target.closest(CONTROL_PANEL_SEL)) return;
-    this.hideTimer = setTimeout(() => {
-      this.setState({ hidden: true });
-    }, HIDE_TIMEOUT);
-  };
-
-  handleKey = e => {
-    const { code } = e;
-
-    let order = 0;
-    if (code === 'ArrowRight') order = 1;
-    if (code === 'ArrowLeft') order = -1;
-    if (order) {
-      this.shiftImage(order);
-    }
-  };
-
-  handleRandomMode = async () => {
-    const { randomMode, fileList } = this.state;
-    let newList;
-    if (!randomMode) {
-      this.fileListTemp = fileList.slice(0);
-      newList = await shuffle(fileList);
-    }
-
-    if (randomMode) {
-      newList = this.fileListTemp.slice(0);
-    }
-
-    const newState = { randomMode: !randomMode, fileList: newList };
-    const callback = this.setPosition;
-    this.setState(newState, callback);
-  };
-
-  handleShiftImage = order => this.shiftImage(order);
-
-  shiftImage = order => {
-    if (this.updating) return;
-    this.updating = true;
-
-    const { amount, currentPosition, fileList } = this.state;
-    if (amount === currentPosition) return;
-    let newPosition = currentPosition + order;
-    if (newPosition > amount) newPosition = 0;
-    if (newPosition < 0) newPosition = amount;
-
-    const newFileName = fileList[newPosition];
-    const newState = {
-      currentPosition: newPosition,
-      fileName: newFileName,
-      base64: '',
-    };
-
-    const callback = () => {
-      // this.initializeFileProps(this.resizeImage);
-    };
-    this.setState(newState, callback);
-
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      this.updating = false;
-    }, 50);
-  };
-
-  // initializeLinkProps = () => {
-  //   const self = this;
-  //   const { fullPath } = this.state;
-  //   const { imageEl } = this.imageEl;
-  //   const img = new Image();
-  //   img.addEventListener('load', function() {
-  //     const height = this.naturalWidth;
-  //     const width = imageEl.naturalWidth;
-  //     const aspect = width / height;
-  //     const newState = { fileProps: { width, height, aspect } };
-  //     self.setState(newState);
+  //     if (dev && i > 1) return this.handleFilesOpen(ar);
+  //     if (!dev && i > 0) return this.handleFilesOpen(ar);
   //   });
-  //   img.src = fullPath;
   // };
-
-  // initializeFileProps = async (callback?) => {
-  //   const { dirName, fileName, fullPath } = this.state;
-  //   const filePath = getFullPath(dirName, fileName);
-  //   const props = await getFileProps(fullPath || filePath);
-
-  //   const { width, height, aspect, err } = props;
-  //   if (err) return;
-
-  //   const newState = { fileProps: { width, height, aspect } };
-  //   // const callback = this.resizeImage;
-  //   this.setState(newState, callback);
-  // };
-
-  resizeImage = async () => {
-    // return;
-    const { dirName, fileName, fileProps } = this.state;
-    if (!fileName) return;
-    const url = getFullPath(dirName, fileName);
-
-    const base64 = await handleResizeImage(url, fileProps);
-    // eslint-disable-next-line react/destructuring-assignment
-    if (base64 && fileName === this.state.fileName) {
-      this.setState({ base64 });
-    }
-  };
-
-  initializeArguments = async () => {
-    // const isDirectory = arg => fs.lstatSync(arg).isDirectory();
-
-    const dirExist = dir => fs.existsSync(dir);
-    const isFile = arg => fs.lstatSync(arg).isFile();
-    const dev = NODE_ENV === 'development';
-    argv.forEach(async (ar, i) => {
-      const existD = await dirExist(ar);
-      if (!existD) return;
-      const existF = await isFile(ar);
-      if (!existF) return;
-
-      if (dev && i > 1) return this.handleFilesOpen(ar);
-      if (!dev && i > 0) return this.handleFilesOpen(ar);
-    });
-  };
 
   handleFiles = ({ list, dir, handleDir }) => {
-    // this.setState({ dir, fileList: list });
+    const { updateDir, updateCurrentFile } = this.props;
 
-    const callback = () => {
-      const callback_ = this.setPosition;
-      if (handleDir) this.initializeDirectory(dir, callback_);
-      if (!handleDir) this.initializeFileList(list, callback_);
-    };
-
-    this.setState({ dir, currentFile: list[0] }, callback);
+    updateDir(dir);
+    updateCurrentFile(list[0]);
+    const callback = this.setPosition;
+    if (handleDir) this.initializeDirectory(dir, callback);
+    if (!handleDir) this.initializeFileList(list, callback);
   };
 
-  setPosition = () => {
-    const { fileList, currentFile } = this.state;
+  handleShuffle = async () => {
+    const { viewModes, fileSystem } = this.props;
+    const { toggleShuffle, updateFileList, updateFileSystem } = this.props;
+    const { shuffle } = viewModes;
+    const { fileList } = fileSystem;
 
-    const isExactPath = f => f.fullPath === currentFile.fullPath;
-    const fileObject = fileList.find(file => isExactPath(file));
+    let newList = [];
+    if (!shuffle) {
+      this.fileList = fileList;
+      const clone = cloneDeep(this.fileList);
+      newList = await shuffleFunc(clone);
+    }
+
+    if (shuffle) {
+      newList = await cloneDeep(this.fileList);
+    }
+    await toggleShuffle();
+    // await updateFileList(newList);
+    this.setPosition({ fileList: newList });
+  };
+
+  setPosition = (objects?) => {
+    const { fileSystem, updatePosition, updateFileSystem } = this.props;
+    const { fileList: list, currentFile } = fileSystem;
+    const fileList = objects && objects.fileList ? objects.fileList : list;
+    const isSamePath = f => f.fullPath === currentFile.fullPath;
+    const fileObject = fileList.find(file => isSamePath(file));
 
     const currentPosition = fileList.indexOf(fileObject);
-    this.setState({ currentPosition });
-  };
-
-  // handleLinkOpen = url => {
-  //   const callback = this.initializeLinkProps;
-  //   this.setState({ fullPath: url }, callback);
-  // };
-
-  handleFilesOpen = fileList => {
-    this.setState({ fileList });
+    updatePosition(currentPosition);
+    updateFileSystem({ currentPosition, ...objects });
   };
 
   initializeFileList = (fileList, callback?) => {
+    const { updateFileList } = this.props;
     const listFiltered = this.filterFileList(fileList);
-    this.setState({ fileList: listFiltered }, callback);
+    updateFileList(listFiltered);
   };
 
   initializeDirectory = (dir, callback?) => {
+    const { updateFileList } = this.props;
     fs.readdir(dir, (err, fileList) => {
       if (err) return toast.error(err);
       const list = this.formatFileObject(fileList, dir);
       const listFiltered = this.filterFileList(list);
-      this.setState({ fileList: listFiltered }, callback);
+      updateFileList(listFiltered);
+      if (callback) callback();
     });
   };
 
@@ -301,26 +145,41 @@ class FSInterface extends Component {
   // };
 
   render() {
-    const { base64, zoomMode, fileProps, randomMode, currentFile } = this.state;
-    const { width, height } = fileProps;
-    const {
-      amount,
-      currentPosition,
-      fileName,
-      fileList,
-      fullPath,
-      dirName,
-    } = this.state;
-    const filesExists = !!fileList.length || fullPath;
-    const filePath = `${formatPath(getFullPath(dirName, fileName))}`;
+    const { fileSystem } = this.props;
+    const { currentFile } = fileSystem;
     return (
       <React.Fragment>
         <DropArea onDrop={this.handleFiles} />
-        <FileHandler currentFile={currentFile} />
-        <GUI />
+        <FileHandler
+          // imageEl={this.imageEl}
+          currentFile={currentFile}
+        />
+
+        <GUI
+          onShuffle={this.handleShuffle}
+          FSInterface={this}
+          imageEl={this.imageEl}
+        />
       </React.Fragment>
     );
   }
 }
 
-export default FSInterface;
+const mapStateToProps = state => ({
+  fileSystem: state.fileSystem,
+  viewModes: state.viewModes,
+});
+
+const mapDispatchToProps = {
+  updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
+  updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),
+  toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
+  updateDir: payload => ({ type: types.UPDATE_DIR, payload }),
+  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
+  updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(FSInterface);

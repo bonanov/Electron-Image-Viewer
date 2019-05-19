@@ -1,82 +1,82 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import ImageContainer from './Image';
 import { handleResizeImage, getFileProps } from '../utils/imageProcessing';
+import * as types from '../constants/actionTypes';
 
 class FileHandler extends Component {
-  state = {
-    base64: '',
-    fileProps: {},
-  };
-
   componentDidMount() {
     this.initializeFileProps();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { currentFile } = this.props;
-    if (prevProps.currentFile.fullPath !== currentFile.fullPath) {
-      const callback = this.initializeFileProps;
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ base64: '' }, callback);
+    const { fileList, currentPosition } = this.props.fileSystem;
+    const currentFile = fileList[currentPosition];
+    const newPosition = prevProps.fileSystem.currentPosition;
+    const prevFile = prevProps.fileSystem.fileList[newPosition];
+    if (!prevFile) return;
+    if (prevFile && prevFile.fullPath !== currentFile.fullPath) {
+      const { updateBase64 } = this.props;
+      console.log(prevFile.fullPath);
+      updateBase64('');
+      this.initializeFileProps();
     }
   }
 
   initializeFileProps = async () => {
-    const { currentFile } = this.props;
-    if (!currentFile.fullPath) return;
+    const { fileList, currentPosition } = this.props.fileSystem;
+    const { updateFileProps } = this.props;
+    const currentFile = fileList[currentPosition];
+    if (!currentFile) return;
     const { fullPath } = currentFile;
+    if (!fullPath) return;
+
     const props = await getFileProps(fullPath);
     const { width, height, aspect, err } = props;
     if (err) return;
-
-    const newState = { fileProps: { width, height, aspect } };
-    const callback = this.handleResize;
-    this.setState(newState, callback);
+    const fileProps = { width, height, aspect };
+    await updateFileProps(fileProps);
+    this.handleResize();
   };
 
   handleResize = async () => {
-    // return;
-    const { dirName, fileName, fileProps, currentFile } = this.props;
+    return;
+    const { fileList, currentPosition } = this.props.fileSystem;
+    const currentFile = fileList[currentPosition];
+    if (!currentFile) return null;
     const { fullPath } = currentFile;
-
+    const { updateBase64 } = this.props;
+    if (currentFile.type === 'gif') return;
     let base64 = await handleResizeImage(fullPath);
+
     // Check if image did not change
-    // eslint-disable-next-line react/destructuring-assignment
-    if (base64 && fullPath === this.props.currentFile.fullPath) {
-      this.setState({ base64 });
-    } else {
-      base64 = null;
+    const newFile = this.props.fileSystem.currentFile;
+    if (base64 && fullPath === newFile.fullPath) {
+      updateBase64(base64);
+      
     }
-  };
-
-  handleZoomChange = () => {
-    const { zoomMode } = this.state;
-    let zoom;
-    if (zoomMode === 0) zoom = 1;
-    if (zoomMode === 1) zoom = 2;
-    if (zoomMode === 2) zoom = 1;
-    this.setState({ zoomMode: zoom });
-  };
-
-  handleZoomMode = mode => {
-    this.setState({ zoomMode: mode });
+    base64 = null;
   };
 
   render() {
-    const { currentFile } = this.props;
-    const { base64 } = this.state;
-    return (
-      <ImageContainer
-        onRef={ref => (this.imageEl = ref)}
-        // zoomMode={zoomMode}
-        base64={base64}
-        path={currentFile.fullPath}
-        // width={width}
-        // height={height}
-        onZoomModeChange={this.handleZoomMode}
-      />
-    );
+    const { currentFile } = this.props.fileSystem;
+    return <ImageContainer onRef={ref => (this.imageEl = ref)} />;
   }
 }
 
-export default FileHandler;
+const mapStateToProps = state => ({
+  fileSystem: state.fileSystem,
+});
+
+const mapDispatchToProps = {
+  updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
+  updateDir: payload => ({ type: types.UPDATE_DIR, payload }),
+  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
+  updateFileProps: payload => ({ type: types.UPDATE_FILE_PROPS, payload }),
+  updateBase64: payload => ({ type: types.UPDATE_BASE64, payload }),
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(FileHandler);

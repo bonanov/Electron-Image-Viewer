@@ -18,7 +18,7 @@ export const destructFilePath = filePath => {
   };
 };
 
-export const shuffle = async array => {
+export const shuffleFunc = async array => {
   const copy = [];
   let n = array.length;
   let i;
@@ -49,4 +49,33 @@ export const formatPath = a => {
   }
   return '';
 };
+
 export const formatFullPath = (a, b) => formatPath(getFullPath(a, b));
+
+export function toggleFullscreen(event) {
+  let element = document.body;
+
+  if (event instanceof HTMLElement) {
+    element = event;
+  }
+
+  const isFullscreen =
+    document.webkitIsFullScreen || document.mozFullScreen || false;
+
+  element.requestFullScreen =
+    element.requestFullScreen ||
+    element.webkitRequestFullScreen ||
+    element.mozRequestFullScreen ||
+    function() {
+      return false;
+    };
+  document.cancelFullScreen =
+    document.cancelFullScreen ||
+    document.webkitCancelFullScreen ||
+    document.mozCancelFullScreen ||
+    function() {
+      return false;
+    };
+
+  isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
+}
