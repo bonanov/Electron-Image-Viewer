@@ -1,0 +1,9 @@
+{
+  "files.exclude": {
+    "image-viewer-win32-x64": true
+  },
+  "search.exclude": {
+    "**/image-viewer-linux-x64": true,
+    "**/image-viewer-win32-x64": true
+  }
+}

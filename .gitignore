@@ -4,6 +4,9 @@
 /node_modules
 /.pnp
 .pnp.js
+image-viewer-linux-x64/
+image-viewer-win32-x64/
+installers/
 
 # testing
 /coverage
@@ -21,3 +24,5 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.env
+

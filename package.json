@@ -1,17 +1,35 @@
 {
   "name": "image-viewer",
+  "description": "image viewer aye",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
+  "main": "src/electron-starter.prod.js",
   "dependencies": {
+    "electron": "^5.0.1",
+    "font-awesome": "^4.7.0",
+    "gm": "^1.23.1",
+    "lodash": "^4.17.11",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1"
+    "react-scripts": "3.0.1",
+    "react-toastify": "^5.1.0",
+    "sharp": "^0.22.1"
   },
   "scripts": {
+    "all": "run-p watch electron-dev",
+    "watch": "run-p start watch-less",
+    "watch-less": "less-watch-compiler src/less/ src/css-auto/ main.less",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build-app": "npm-run-all build electron-build",
+    "flow": "flow",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "deb64": "electron-installer-debian --src image-viewer-linux-x64/ --dest image-viewer-linux-x64/installers/ --arch amd64",
+    "electron-build": "electron-packager . --overwrite --ignore=/node_modules/.bin --ignore=/public",
+    "electron-dev": "ELECTRON_START_URL=http://localhost:3000 electron ./src/electron-starter.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -27,5 +45,19 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "electron-devtools-installer": "^2.2.4",
+    "electron-installer-debian": "^1.2.0",
+    "electron-rebuild": "^1.8.4",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react": "^7.13.0",
+    "prettier": "^1.17.1"
   }
 }
