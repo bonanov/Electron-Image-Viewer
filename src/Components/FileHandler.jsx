@@ -45,7 +45,7 @@ class FileHandler extends Component {
   };
 
   handleResize = async () => {
-    return;
+    // return;
     const { fileList, currentPosition } = this.props.fileSystem;
     const currentFile = fileList[currentPosition];
     if (!currentFile) return null;

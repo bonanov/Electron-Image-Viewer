@@ -66,16 +66,15 @@ class FSInterface extends Component {
     let newList = [];
     if (!shuffle) {
       this.fileList = fileList;
-      const cloned = clone(this.fileList);
-      newList = await _shuffle(cloned);
+      newList = await _shuffle(fileList);
     }
 
     if (shuffle) {
-      newList = await clone(this.fileList);
+      newList = await this.fileList;
     }
 
     await toggleShuffle();
-    this.setPosition({ fileList: newList });
+    this.setPosition({ fileList: clone(newList) });
   };
 
   setPosition = (objects?) => {

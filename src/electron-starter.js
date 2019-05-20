@@ -4,7 +4,6 @@ const electron = require('electron');
 const config = require('config');
 
 const dbConfig = config.get('Main');
-console.log(dbConfig);
 
 const {
   default: installExtension,
@@ -29,6 +28,8 @@ function createWindow() {
     transparent: true,
     webPreferences: {
       nodeIntergation: true,
+      experimentalFeatures: true,
+      nodeIntegrationInWorker: true,
       preload: __dirname + '/preload.js',
       webSecurity: false,
     },
