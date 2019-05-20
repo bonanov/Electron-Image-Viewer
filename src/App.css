@@ -174,3 +174,7 @@ body {
   margin: auto;
   text-align: center;
 }
+.Toastify__toast-container {
+  width: auto !important;
+  max-width: 100% !important;
+}

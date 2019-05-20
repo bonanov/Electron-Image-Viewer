@@ -1,6 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 const electron = require('electron');
+const config = require('config');
+
+const dbConfig = config.get('Main');
+console.log(dbConfig);
 
 const {
   default: installExtension,

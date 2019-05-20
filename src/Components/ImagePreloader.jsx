@@ -14,7 +14,7 @@ class ImagePreloader extends Component {
     const prevPos = currentPosition - 1;
     const nextFile = nextPos > amount - 2 ? fileList[0] : fileList[nextPos];
     const prevFile = prevPos < 0 ? fileList[amount - 1] : fileList[prevPos];
-
+    if (!nextFile || !prevFile) return null;
     const nextFilePath = `file://${nextFile.fullPath}`;
     const prevFilePath = `file://${prevFile.fullPath}`;
 

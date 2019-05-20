@@ -8,6 +8,7 @@ export const HIDE_UI = 'HIDE_UI';
 export const SHOW_UI = 'SHOW_UI';
 export const UPDATE_SCALE = 'SET_SCALE';
 export const UPDATE_FILESYSTEM = 'UPDATE_FILESYSTEM';
+export const SET_SHUFFLE = 'SET_SHUFFLE';
 // files
 export const UPDATE_FILELIST = 'UPDATE_FILELIST';
 export const UPDATE_CURRENT_FILE = 'UPDATE_CURRENT_FILE';

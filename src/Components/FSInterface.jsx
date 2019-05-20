@@ -2,11 +2,10 @@ import React, { Component } from 'react';
 
 import { toast } from 'react-toastify';
 import { connect } from 'react-redux';
-import { cloneDeep } from 'lodash';
+import { clone, shuffle as _shuffle } from 'lodash';
 import * as types from '../constants/actionTypes';
 import 'react-toastify/dist/ReactToastify.css';
 import DropArea from './DropArea';
-import { shuffleFunc } from '../utils/base';
 import { FILE_TYPES, FILE_EXT } from '../constants/fileTypes';
 import FileHandler from './FileHandler';
 // import FilesHandler from './FilesHandler';
@@ -48,33 +47,34 @@ class FSInterface extends Component {
   // };
 
   handleFiles = ({ list, dir, handleDir }) => {
-    const { updateDir, updateCurrentFile } = this.props;
+    const { updateDir, updateCurrentFile, setShuffle } = this.props;
 
     updateDir(dir);
     updateCurrentFile(list[0]);
+    setShuffle(false);
     const callback = this.setPosition;
     if (handleDir) this.initializeDirectory(dir, callback);
     if (!handleDir) this.initializeFileList(list, callback);
   };
 
-  handleShuffle = async () => {
+  handleToggleShuffle = async () => {
     const { viewModes, fileSystem } = this.props;
-    const { toggleShuffle, updateFileList, updateFileSystem } = this.props;
+    const { toggleShuffle } = this.props;
     const { shuffle } = viewModes;
     const { fileList } = fileSystem;
 
     let newList = [];
     if (!shuffle) {
       this.fileList = fileList;
-      const clone = cloneDeep(this.fileList);
-      newList = await shuffleFunc(clone);
+      const cloned = clone(this.fileList);
+      newList = await _shuffle(cloned);
     }
 
     if (shuffle) {
-      newList = await cloneDeep(this.fileList);
+      newList = await clone(this.fileList);
     }
+
     await toggleShuffle();
-    // await updateFileList(newList);
     this.setPosition({ fileList: newList });
   };
 
@@ -82,22 +82,24 @@ class FSInterface extends Component {
     const { fileSystem, updatePosition, updateFileSystem } = this.props;
     const { fileList: list, currentFile } = fileSystem;
     const fileList = objects && objects.fileList ? objects.fileList : list;
-    const isSamePath = f => f.fullPath === currentFile.fullPath;
-    const fileObject = fileList.find(file => isSamePath(file));
 
+    const isSamePath = f => f && f.fullPath === currentFile.fullPath;
+    const fileObject = fileList.find(file => isSamePath(file));
+    if (!fileObject) return;
     const currentPosition = fileList.indexOf(fileObject);
-    updatePosition(currentPosition);
+    // updatePosition(currentPosition);
     updateFileSystem({ currentPosition, ...objects });
   };
 
-  initializeFileList = (fileList, callback?) => {
+  initializeFileList = async (fileList, callback?) => {
     const { updateFileList } = this.props;
-    const listFiltered = this.filterFileList(fileList);
+    const listFiltered = await this.filterFileList(fileList);
     updateFileList(listFiltered);
   };
 
   initializeDirectory = (dir, callback?) => {
     const { updateFileList } = this.props;
+
     fs.readdir(dir, (err, fileList) => {
       if (err) return toast.error(err);
       const list = this.formatFileObject(fileList, dir);
@@ -135,14 +137,33 @@ class FSInterface extends Component {
     return newList;
   };
 
-  // destructFilePath = filePath => {
-  //   const dirName = path.dirname(filePath);
-  //   const fileName = path.basename(filePath);
-  //   return {
-  //     dirName,
-  //     fileName,
-  //   };
-  // };
+  // TODO: rework! some dumb shit is going on here
+  handleFileError = async path => {
+    const {
+      fileSystem,
+      viewModes,
+      updateFileList,
+      updatePosition,
+    } = this.props;
+    const { fileList, currentPosition: i } = fileSystem;
+    const { shuffle } = viewModes;
+    const fileExists = fs.existsSync(path);
+    if (!fileExists) {
+      let newList = [];
+      if (shuffle) {
+        this.fileList = this.fileList.filter(file => file.fullPath !== path);
+        newList = this.fileList;
+      }
+
+      if (!shuffle) {
+        newList = fileList.filter(file => file.fullPath !== path);
+      }
+      await updateFileList(clone(newList));
+      // this.setPosition();
+      if (i > fileList.length || i < 0) return updatePosition(0);
+      updatePosition(i - 1);
+    }
+  };
 
   render() {
     const { fileSystem } = this.props;
@@ -151,12 +172,13 @@ class FSInterface extends Component {
       <React.Fragment>
         <DropArea onDrop={this.handleFiles} />
         <FileHandler
+          onFileError={this.handleFileError}
           // imageEl={this.imageEl}
           currentFile={currentFile}
         />
 
         <GUI
-          onShuffle={this.handleShuffle}
+          onShuffle={this.handleToggleShuffle}
           FSInterface={this}
           imageEl={this.imageEl}
         />
@@ -172,8 +194,9 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
-  updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
+  setShuffle: () => ({ type: types.SET_SHUFFLE }),
+  updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),
   updateDir: payload => ({ type: types.UPDATE_DIR, payload }),
   updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
   updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),

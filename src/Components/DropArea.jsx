@@ -77,13 +77,11 @@ class DropArea extends Component {
       dir: '',
       handleDir: true,
     };
-
     [...files].forEach(file => {
       const fileObject = this.formatFileObject(file);
       if (!fileObject) return;
       fileList.list.push(fileObject);
     });
-
     const firstFile = fileList.list[0];
     if (!firstFile) {
       toast.error('No supported files found');

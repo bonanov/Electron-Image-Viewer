@@ -6,6 +6,7 @@
   "homepage": "./",
   "main": "src/electron-starter.prod.js",
   "dependencies": {
+    "config": "^3.1.0",
     "electron": "^5.0.1",
     "font-awesome": "^4.7.0",
     "gm": "^1.23.1",

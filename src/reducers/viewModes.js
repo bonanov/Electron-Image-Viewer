@@ -60,6 +60,10 @@ const viewModes = (state = initialState, action) => {
     return { ...state, shuffle: !state.shuffle };
   }
 
+  if (action.type === types.SET_SHUFFLE) {
+    return { ...state, shuffle: action.payload };
+  }
+
   return state;
 };
 

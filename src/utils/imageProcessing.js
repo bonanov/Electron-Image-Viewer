@@ -5,17 +5,20 @@ const gm = window.gm;
 const sharp = window.sharp;
 
 export const getFileProps = async filePath => {
+  console.log(1);
   const size = await getFileSize(filePath);
-  const { width, height } = size;
+  console.log(2);
+  const { width, height, err } = size;
   const aspect = width / height;
 
-  return { width, height, aspect };
+  return { width, height, aspect, err };
 };
 
 const getFileSize = async dir => {
   const fileSize = await new Promise((resolve, reject) => {
     gm(dir).size(async (err, size) => {
-      if (err) return reject(err);
+      if (err) return resolve({ err });
+      // eslint-disable-next-line prefer-promise-reject-errors
       resolve({ width: size.width, height: size.height });
     });
   });

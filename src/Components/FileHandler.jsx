@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { toast } from 'react-toastify';
 import ImageContainer from './Image';
 import { handleResizeImage, getFileProps } from '../utils/imageProcessing';
 import * as types from '../constants/actionTypes';
@@ -14,8 +15,8 @@ class FileHandler extends Component {
     const currentFile = fileList[currentPosition];
     const newPosition = prevProps.fileSystem.currentPosition;
     const prevFile = prevProps.fileSystem.fileList[newPosition];
-    if (!prevFile) return;
-    if (prevFile && prevFile.fullPath !== currentFile.fullPath) {
+    if (!prevFile || !currentFile) return;
+    if (prevFile.fullPath !== currentFile.fullPath) {
       const { updateBase64 } = this.props;
       console.log(prevFile.fullPath);
       updateBase64('');
@@ -25,7 +26,7 @@ class FileHandler extends Component {
 
   initializeFileProps = async () => {
     const { fileList, currentPosition } = this.props.fileSystem;
-    const { updateFileProps } = this.props;
+    const { updateFileProps, onFileError } = this.props;
     const currentFile = fileList[currentPosition];
     if (!currentFile) return;
     const { fullPath } = currentFile;
@@ -33,7 +34,11 @@ class FileHandler extends Component {
 
     const props = await getFileProps(fullPath);
     const { width, height, aspect, err } = props;
-    if (err) return;
+    if (err) {
+      // toast.error(err.message);
+      onFileError(currentFile.fullPath);
+      return;
+    }
     const fileProps = { width, height, aspect };
     await updateFileProps(fileProps);
     this.handleResize();
@@ -53,7 +58,6 @@ class FileHandler extends Component {
     const newFile = this.props.fileSystem.currentFile;
     if (base64 && fullPath === newFile.fullPath) {
       updateBase64(base64);
-      
     }
     base64 = null;
   };
