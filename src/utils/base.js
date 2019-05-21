@@ -77,5 +77,6 @@ export function toggleFullscreen(event) {
       return false;
     };
 
+  // eslint-disable-next-line no-unused-expressions
   isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
 }

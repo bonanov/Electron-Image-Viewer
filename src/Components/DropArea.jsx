@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { toast } from '../../node_modules/react-toastify';
 import { FILE_TYPES, SUPPORTED_EXTENSIONS } from '../constants/fileTypes';
-import { FILE_EXT } from '../constants/base';
+// import { FILE_EXT } from '../constants/base';
 
 const { remote } = window.electron;
 const fs = remote.require('fs');

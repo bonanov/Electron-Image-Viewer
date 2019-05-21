@@ -30,10 +30,10 @@ class ImageContainer extends Component {
   };
 
   render() {
-    const { fileSystem, viewModes } = this.props;
+    const { fileSystem, viewModes, base64 } = this.props;
     // const { fullPath, base64 } = fileSystem.currentFile;
 
-    const { currentPosition, fileList, base64 } = fileSystem;
+    const { currentPosition, fileList } = fileSystem;
     const currentFile = fileList[currentPosition];
     if (!currentFile) return null;
     const { fullPath } = currentFile;

@@ -4,10 +4,33 @@ import { toast } from 'react-toastify';
 import ImageContainer from './Image';
 import { handleResizeImage, getFileProps } from '../utils/imageProcessing';
 import * as types from '../constants/actionTypes';
+import * as message from '../constants/asyncMessages';
+
+const { ipcRenderer } = window.electron;
 
 class FileHandler extends Component {
+  state = {
+    base64: '',
+  };
+
   componentDidMount() {
-    this.initializeFileProps();
+    ipcRenderer.on('asynchronous-message', (event, arg) => {
+      const { type, data } = arg;
+      switch (type) {
+        case 'SEND_PROPS': {
+          this.setProps(data);
+          break;
+        }
+
+        case 'SEND_RESIZED': {
+          this.setResized(data);
+          break;
+        }
+
+        default:
+          break;
+      }
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -18,13 +41,42 @@ class FileHandler extends Component {
     if (!prevFile || !currentFile) return;
     if (prevFile.fullPath !== currentFile.fullPath) {
       const { updateBase64 } = this.props;
-      console.log(prevFile.fullPath);
-      updateBase64('');
-      this.initializeFileProps();
+      // updateBase64('');
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ base64: '' });
+      // this.setProps();
+      this.handleProps();
+      this.handleResize();
     }
   }
 
-  initializeFileProps = async () => {
+  handleProps = () => {
+    const { fileList, currentPosition } = this.props.fileSystem;
+    const currentFile = fileList[currentPosition];
+    if (!currentFile) return;
+    const { fullPath } = currentFile;
+    if (!fullPath) return;
+
+    ipcRenderer.send('asynchronous-message', message.getProps(fullPath));
+  };
+
+  handleResize = () => {
+    const { fileList, currentPosition } = this.props.fileSystem;
+    const currentFile = fileList[currentPosition];
+    if (!currentFile) return;
+    const { fullPath } = currentFile;
+    if (!fullPath) return;
+    const { innerHeight: height, innerWidth: width } = window;
+
+    const newMessage = {
+      path: fullPath,
+      width,
+      height,
+    };
+    ipcRenderer.send('asynchronous-message', message.getResized(newMessage));
+  };
+
+  setProps = async props => {
     const { fileList, currentPosition } = this.props.fileSystem;
     const { updateFileProps, onFileError } = this.props;
     const currentFile = fileList[currentPosition];
@@ -32,39 +84,75 @@ class FileHandler extends Component {
     const { fullPath } = currentFile;
     if (!fullPath) return;
 
-    const props = await getFileProps(fullPath);
-    const { width, height, aspect, err } = props;
+    const { width, height, aspect, err, fullPath: path } = props;
+
     if (err) {
       // toast.error(err.message);
       onFileError(currentFile.fullPath);
       return;
     }
+
     const fileProps = { width, height, aspect };
+    if (path !== fullPath) return;
     await updateFileProps(fileProps);
-    this.handleResize();
+    // this.handleResize();
   };
 
-  handleResize = async () => {
-    // return;
+  setResized = ({ base64, fullPath: path }) => {
     const { fileList, currentPosition } = this.props.fileSystem;
     const currentFile = fileList[currentPosition];
-    if (!currentFile) return null;
+    if (!currentFile) return;
     const { fullPath } = currentFile;
-    const { updateBase64 } = this.props;
-    if (currentFile.type === 'gif') return;
-    let base64 = await handleResizeImage(fullPath);
-
-    // Check if image did not change
-    const newFile = this.props.fileSystem.currentFile;
-    if (base64 && fullPath === newFile.fullPath) {
-      updateBase64(base64);
-    }
-    base64 = null;
+    if (!fullPath) return;
+    if (path !== currentFile.fullPath) return;
+    // updateBase64(base64);
+    this.setState({ base64 });
   };
 
+  // setProps = async () => {
+  //   const { fileList, currentPosition } = this.props.fileSystem;
+  //   const { updateFileProps, onFileError } = this.props;
+  //   const currentFile = fileList[currentPosition];
+  //   if (!currentFile) return;
+  //   const { fullPath } = currentFile;
+  //   if (!fullPath) return;
+
+  //   const props = await getFileProps(fullPath);
+  //   const { width, height, aspect, err } = props;
+  //   if (err) {
+  //     // toast.error(err.message);
+  //     onFileError(currentFile.fullPath);
+  //     return;
+  //   }
+  //   const fileProps = { width, height, aspect };
+  //   await updateFileProps(fileProps);
+  //   this.handleResize();
+  // };
+
+  // handleResize = async () => {
+  //   // return;
+  //   const { fileList, currentPosition } = this.props.fileSystem;
+  //   const currentFile = fileList[currentPosition];
+  //   if (!currentFile) return null;
+  //   const { fullPath } = currentFile;
+  //   const { updateBase64 } = this.props;
+  //   if (currentFile.type === 'gif') return;
+  //   let base64 = await handleResizeImage(fullPath);
+
+  //   // Check if image did not change
+  //   const newFile = this.props.fileSystem.currentFile;
+  //   if (base64 && fullPath === newFile.fullPath) {
+  //     updateBase64(base64);
+  //   }
+  //   base64 = null;
+  // };
+
   render() {
+    const { base64 } = this.state;
     const { currentFile } = this.props.fileSystem;
-    return <ImageContainer onRef={ref => (this.imageEl = ref)} />;
+    return (
+      <ImageContainer base64={base64} onRef={ref => (this.imageEl = ref)} />
+    );
   }
 }
 

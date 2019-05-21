@@ -1,26 +1,6 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable global-require */
-/* eslint-disable no-unused-vars */
-/* eslint-disable camelcase */
-/* global self */
 /* eslint no-restricted-globals: ["error", "event"] */
-
-// const handleMessage = ev => {
-//   const { data } = ev;
-//   // self.postMessage('keked');
-//   console.log(data);
-//   if (data === 'Ger started') self.postMessage('keked');
-// };
-// eslint-disable-next-line no-restricted-globals
-// self.addEventListener('message', handleMessage);
-
-// import sharp from 'sharp';
-const sharp = window.sharp;
-
-// addEventListener('message', event => {
-//   postMessage('ke');
-// console.log('ke');
-// });
+const sharp = require('sharp');
+// $(npm bin)/webpack src/resizeWindow/app.js -o src/resizeWindow/bundle.js
 
 // export default () => {
 const resizeImage = ({ path, width, height }) => {
