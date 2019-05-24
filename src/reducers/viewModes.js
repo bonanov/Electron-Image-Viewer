@@ -4,8 +4,8 @@ const initialState = {
   zoomMode: 1,
   shuffle: false,
   uiHidden: false,
-  scale: 1,
   bgColor: '#222',
+  scale: 1,
   imagePosition: {
     x: 0,
     y: 0,
@@ -23,6 +23,10 @@ const viewModes = (state = initialState, action) => {
 
   if (action.type === types.UPDATE_BG_COLOR) {
     return { ...state, bgColor: action.payload };
+  }
+
+  if (action.type === types.SET_ZOOM_MODE) {
+    return { ...state, zoomMode: action.payload };
   }
 
   if (action.type === types.TOGGLE_ZOOM_MODE) {

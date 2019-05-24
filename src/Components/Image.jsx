@@ -3,25 +3,24 @@ import { toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
 import * as types from '../constants/actionTypes.js';
+import { getCurrentFile, getViewModes } from '../utils/getValueFromStore';
 
 class ImageContainer extends Component {
   imageEl = null;
 
   getStyle = () => {
-    const { viewModes, fileSystem } = this.props;
-    const { scale, zoomMode, imagePosition } = viewModes;
-    const { fileProps } = fileSystem.currentFile;
+    const { scale, zoomMode, imagePosition } = getViewModes();
+    const { fileProps } = getCurrentFile();
     if (!fileProps) return;
-    const { width, height } = fileProps;
+    const { width } = fileProps;
     if (!width) return;
-    let scaleValue;
-    if (zoomMode === 0) scaleValue = scale;
-    if (zoomMode === 1) scaleValue = 1;
-    if (zoomMode === 2) {
-      const image = this.imageEl.querySelector('.image-inner');
-      const elementWidth = image.offsetWidth;
-      scaleValue = width / elementWidth;
-    }
+    const scaleValue = scale;
+    // if (zoomMode === 1) scaleValue = 1;
+    // if (zoomMode === 2) {
+    //   const image = this.imageEl.querySelector('.image-inner');
+    //   const elementWidth = image.offsetWidth;
+    //   scaleValue = width / elementWidth;
+    // }
     const { x, y } = imagePosition;
     const transform = `translateX(${x}px) translateY(${y}px) scale(${scaleValue})`;
     const style = {
@@ -37,7 +36,8 @@ class ImageContainer extends Component {
   };
 
   render() {
-    const { fileSystem, viewModes, base64, base64Bg, onRef } = this.props;
+    const { fileSystem, base64, base64Bg, onRef } = this.props;
+    const { zoomMode, scale } = getViewModes();
     // const { fullPath, base64 } = fileSystem.currentFile;
 
     const { currentPosition, fileList } = fileSystem;
@@ -45,9 +45,9 @@ class ImageContainer extends Component {
     if (!currentFile) return null;
     const { fullPath, type } = currentFile;
 
-    const zoomFit = viewModes.zoomMode === 1;
+    const zoomFit = zoomMode === 1;
+    const noScale = scale <= 1;
     const style = this.getStyle();
-    const noScale = viewModes.scale <= 1;
     const src = base64 && (zoomFit || noScale) ? base64 : formatPath(fullPath);
     return (
       <React.Fragment>

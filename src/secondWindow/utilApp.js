@@ -1,5 +1,11 @@
 import * as message from '../constants/asyncMessages';
-import { resizeImage, getFileProps, getAverageColor, blurImage } from './utils';
+import {
+  resizeImage,
+  getFileProps,
+  getAverageColor,
+  blurImage,
+  getDirectory,
+} from './utils';
 
 const { ipcRenderer } = window.electron;
 
@@ -30,11 +36,22 @@ ipcRenderer.on('asynchronous-message', async (event, arg) => {
     }
 
     case 'GET_COLOR': {
-      console.log(data);
       const { buffer, fullPath } = data;
       const color = await getAverageColor(buffer);
       const newMessage = { fullPath, color };
       ipcRenderer.send('asynchronous-message', message.sendColor(newMessage));
+      break;
+    }
+
+    case 'GET_FILELIST': {
+      const { dir } = data;
+      const fileList = await getDirectory(dir);
+      console.log(fileList);
+      const newMessage = { fileList };
+      ipcRenderer.send(
+        'asynchronous-message',
+        message.sendFileList(newMessage)
+      );
       break;
     }
 

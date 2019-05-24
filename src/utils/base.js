@@ -80,3 +80,6 @@ export function toggleFullscreen(event) {
   // eslint-disable-next-line no-unused-expressions
   isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
 }
+export const mod = (n, m) => ((n % m) + m) % m;
+
+export const spinArrayPosition = (arr, position) => mod(position, arr.length);

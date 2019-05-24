@@ -12,6 +12,7 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 let mainWindow;
 let secondWindow;
 let thirdWindow;
+let forthWindow;
 
 function closeAllWindows() {
   if (process.platform !== 'darwin') {
@@ -25,7 +26,6 @@ function createWindow() {
     height: 800,
     frame: true,
     show: false,
-    transparent: true,
     webPreferences,
   });
 
@@ -34,6 +34,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
     createSecondWindow();
     createThirdWindow();
+    createForthWindow();
   });
 
   const startUrl =
@@ -83,6 +84,24 @@ function createThirdWindow() {
 
   thirdWindow.loadURL(startUrl);
   thirdWindow.on('closed', closeAllWindows);
+}
+
+function createForthWindow() {
+  forthWindow = new BrowserWindow({
+    title: 'electron-props',
+    show: true,
+    webPreferences,
+  });
+
+  // forthWindow.show();
+  const startUrl = url.format({
+    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+
+  forthWindow.loadURL(startUrl);
+  forthWindow.on('closed', closeAllWindows);
 }
 
 app.on('ready', createWindow);
@@ -139,6 +158,16 @@ ipcMain.on('asynchronous-message', (event, arg) => {
     }
 
     case 'SEND_BLURED': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'GET_FILELIST': {
+      forthWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_FILELIST': {
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
     }

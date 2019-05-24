@@ -1,28 +1,28 @@
 import React, { Component } from 'react';
-import { getFullPath } from '../utils/base';
+import { getClosestNFiles } from '../utils/getValueFromStore';
+import { PRELOAD_N_IMAGES } from '../constants/base';
 
 class ImagePreloader extends Component {
   state = {};
 
   render() {
-    const { currentPosition, fileList, bgColor } = this.props;
-
-    const amount = fileList.length;
+    const { fileList, bgColor } = this.props;
     if (!fileList.length) return null;
 
-    const nextPos = currentPosition + 1;
-    const prevPos = currentPosition - 1;
-    const nextFile = nextPos > amount - 2 ? fileList[0] : fileList[nextPos];
-    const prevFile = prevPos < 0 ? fileList[amount - 1] : fileList[prevPos];
-    if (!nextFile || !prevFile) return null;
-    const nextFilePath = `file://${nextFile.fullPath}`;
-    const prevFilePath = `file://${prevFile.fullPath}`;
+    const preloadFileList = getClosestNFiles(PRELOAD_N_IMAGES);
 
     return (
       <React.Fragment>
         <div className="preload-image_container">
-          <img alt="" className="preload-image" src={nextFilePath} />
-          <img alt="" className="preload-image" src={prevFilePath} />
+          {preloadFileList.map((file, index) => (
+            <img
+              key={index}
+              alt=""
+              className="preload-image"
+              src={`file:///${file.fullPath}`}
+            />
+          ))}
+
           <div
             style={{ backgroundColor: bgColor }}
             className="preload-overlay"

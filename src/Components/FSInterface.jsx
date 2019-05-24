@@ -10,6 +10,10 @@ import { FILE_TYPES, FILE_EXT } from '../constants/fileTypes';
 import FileHandler from './FileHandler';
 // import FilesHandler from './FilesHandler';
 import GUI from './GUI';
+import * as message from '../constants/asyncMessages';
+import { getInitialFile } from '../utils/getValueFromStore';
+
+const { ipcRenderer } = window.electron;
 
 const { remote } = window.electron;
 const fs = remote.require('fs');
@@ -26,6 +30,18 @@ class FSInterface extends Component {
   }
 
   componentDidMount() {
+    ipcRenderer.on('asynchronous-message', (event, arg) => {
+      const { type, data } = arg;
+      switch (type) {
+        case 'SEND_FILELIST': {
+          this.handleDirectory(data);
+          break;
+        }
+
+        default:
+          break;
+      }
+    });
     // this.initializeArguments();
   }
 
@@ -53,8 +69,23 @@ class FSInterface extends Component {
     updateCurrentFile(list[0]);
     setShuffle(false);
     const callback = this.findPosition;
-    if (handleDir) this.initializeDirectory(dir, callback);
+
+    // if (handleDir) this.initializeDirectory(dir, callback);
+    if (handleDir) {
+      ipcRenderer.send('asynchronous-message', message.getFileList(dir));
+    }
     if (!handleDir) this.initializeFileList(list, callback);
+  };
+
+  handleDirectory = ({ fileList }) => {
+    const { updateFileList, updatePosition } = this.props;
+    const initialFile = getInitialFile();
+    const currentFile = fileList.filter(
+      file => file.fullPath === initialFile.fullPath
+    )[0];
+    const currentPosition = fileList.indexOf(currentFile);
+    updateFileList(fileList);
+    updatePosition(currentPosition);
   };
 
   handleToggleShuffle = async () => {
@@ -96,36 +127,38 @@ class FSInterface extends Component {
     updateFileList(listFiltered);
   };
 
-  initializeDirectory = (dir, callback?) => {
-    const { updateFileList } = this.props;
+  // initializeDirectory = (dir, callback?) => {
+  //   const { updateFileList } = this.props;
+  //   ipcRenderer.send('asynchronous-message', message.getFileList(dir));
+  //   fs.readdir(dir, (err, fileList) => {
+  //     if (err) return toast.error(err);
+  //     const list = this.formatFileObject(fileList, dir);
+  //     const listFiltered = this.filterFileList(list);
+  //     updateFileList(listFiltered);
+  //     if (callback) callback();
+  //   });
+  // };
 
-    fs.readdir(dir, (err, fileList) => {
-      if (err) return toast.error(err);
-      const list = this.formatFileObject(fileList, dir);
-      const listFiltered = this.filterFileList(list);
-      updateFileList(listFiltered);
-      if (callback) callback();
-    });
-  };
-
-  formatFileObject = (fileNameList, dir) => {
-    const fileList = [];
-    fileNameList.forEach(fileName => {
-      const type = this.getFileType(fileName);
-      const object = {
-        fileName: fileName.replace(/\?/g, '%3F'),
-        fullPath: (dir + fileName).replace(/\?/g, '%3F'),
-        url: '',
-        dir: dir.replace(/\?/g, '%3F'),
-        size: '',
-        lastModified: '',
-        isUrl: false,
-        type,
-      };
-      fileList.push(object);
-    });
-    return fileList;
-  };
+  // formatFileObject = (fileNameList, dir) => {
+  //   const fileList = [];
+  //   fileNameList.forEach(fileName => {
+  //     const id = Math.floor(Math.random() * Date.now());
+  //     const type = this.getFileType(fileName);
+  //     const object = {
+  //       fileName: fileName.replace(/\?/g, '%3F'),
+  //       fullPath: (dir + fileName).replace(/\?/g, '%3F'),
+  //       url: '',
+  //       dir: dir.replace(/\?/g, '%3F'),
+  //       size: '',
+  //       lastModified: '',
+  //       isUrl: false,
+  //       type,
+  //       id,
+  //     };
+  //     fileList.push(object);
+  //   });
+  //   return fileList;
+  // };
 
   getFileType = name => name.replace(FILE_EXT, '$1');
 

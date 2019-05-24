@@ -97,11 +97,13 @@ class DropArea extends Component {
   isSupportedType = type => !!FILE_TYPES.includes(type);
 
   formatFileObject = file => {
+    const id = Math.floor(Math.random() * Date.now());
     const dir = file.path.replace(file.name, '');
     const type = file.type.replace('image/', '');
     // const supportedFile = this.isSupportedType(type);
     // if (!supportedFile) return;
     const fileObject = {
+      id,
       fileName: file.name,
       fullPath: file.path,
       url: '',
@@ -116,6 +118,7 @@ class DropArea extends Component {
   };
 
   formatUrlObject = file => {
+    const id = Math.floor(Math.random() * Date.now());
     const dir = file.path.replace(file.name, '');
     const fileObject = {
       filename: file.name,
@@ -126,6 +129,7 @@ class DropArea extends Component {
       size: '',
       lastModified: '',
       isUrl: true,
+      id,
     };
 
     return fileObject;

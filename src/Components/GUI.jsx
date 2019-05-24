@@ -10,7 +10,12 @@ import {
   CONTROL_PANEL_SEL,
   IMAGE_CONTAINER_SEL,
 } from '../constants/base';
-import { shuffleFunc, toggleFullscreen } from '../utils/base.js';
+import { shuffleFunc, toggleFullscreen, mod } from '../utils/base.js';
+import {
+  getCurrentFile,
+  getInitialFile,
+  getViewModes,
+} from '../utils/getValueFromStore.js';
 
 class GUI extends Component {
   constructor() {
@@ -103,7 +108,6 @@ class GUI extends Component {
   handleImageMove = e => {
     const { updateImagePosition } = this.props;
     const { imageEl, viewModes } = this.props;
-    const { imagePosition } = viewModes;
     if (!imageEl) return;
 
     const { clientX, clientY } = e;
@@ -126,6 +130,8 @@ class GUI extends Component {
 
   handlePanelsHide = target => {
     const { hideUi, showUi, viewModes } = this.props;
+    const { moving } = this.state;
+    if (moving) return hideUi();
     clearTimeout(this.hideTimer);
 
     if (viewModes.uiHidden) {
@@ -138,58 +144,107 @@ class GUI extends Component {
 
   handleWheel = e => {
     const delta = e.deltaY > 0 ? -1 : 1;
-    this.handleZoom({ delta });
+    const { clientX, clientY } = e;
+    this.handleZoom({ delta, clientX, clientY });
   };
 
-  handleZoom = async ({ delta, initialScale }) => {
+  handleZoom = async ({ delta, initialScale, clientX, clientY }) => {
     const { updateScale, setZoomFree } = this.props;
-    const { viewModes } = this.props;
+    const { viewModes, imageEl } = this.props;
     const { zoomMode } = viewModes;
-    let { scale } = viewModes;
-    if (!this.transitionEnded) return;
-    this.transitionEnded = false;
-    if (zoomMode !== 0) {
-      scale = 1;
-      setZoomFree();
-    }
-    let scaleNew = initialScale || scale + 0.15 * delta * Math.exp(scale / 4);
+    const { scale } = viewModes;
+    // if (!this.transitionEnded) return;
+    // this.transitionEnded = false;
+    // if (zoomMode !== 0) {
+    //   scale = 1;
+    setZoomFree();
+    // }
+
+    const mult = Math.exp(scale / 2);
+
+    let scaleNew = initialScale || scale + 0.1 * delta * Math.min(15, mult);
+
     scaleNew = Math.min(Math.max(0.1, scaleNew), 15);
-    let scaleFormated = Number(scaleNew.toFixed(2));
-    if (scaleFormated <= 1.1 && scaleFormated >= 0.94) scaleFormated = 1;
-    console.log('wheel');
-    updateScale(scaleFormated);
-    clearTimeout(this.transitionTimer);
-    this.transitionTimer = setTimeout(() => {
-      this.transitionEnded = true;
-    }, 20);
+    scaleNew = parseFloat(scaleNew.toFixed(2));
+    if (scaleNew <= 1.1 && scaleNew >= 0.94) scaleNew = 1;
+    updateScale(scaleNew);
+    // clearTimeout(this.transitionTimer);
+    // this.transitionTimer = setTimeout(() => {
+    //   this.transitionEnded = true;
+    // }, 20);
+  };
+
+  getZoomMultiplier = () => {
+    const { imageEl } = this.props;
+    const { width, height } = imageEl
+      .querySelector('.image-inner')
+      .getBoundingClientRect();
+    console.log(width);
+    const { innerHeight, innerWidth } = window;
+    const imageDims = width * height;
+    const windowDims = innerHeight * innerWidth;
+    return imageDims / windowDims;
   };
 
   handleZoomToggle = () => {
-    const { toggleZoomMode, resetImagePosition } = this.props;
+    const { fileProps } = getCurrentFile();
+
+    const {
+      toggleZoomMode,
+      resetImagePosition,
+      setZoomMode,
+      updateScale,
+    } = this.props;
+    const { viewModes, fileSystem, imageEl } = this.props;
+
+    if (!fileProps) return;
+    const { width, height } = fileProps;
+
+    switch (viewModes.zoomMode) {
+      case 0:
+        // fit
+        setZoomMode(1);
+        updateScale(1);
+        break;
+      case 1: {
+        // expand
+        setZoomMode(2);
+        const image = imageEl.querySelector('.image-inner');
+        const elementWidth = image.offsetWidth;
+        const scale = width / elementWidth;
+        updateScale(scale);
+        break;
+      }
+      case 2:
+        // free
+        updateScale(1);
+        setZoomMode(1);
+        break;
+      default:
+        break;
+    }
     resetImagePosition();
-    toggleZoomMode();
+    // toggleZoomMode();
   };
 
   handleShiftImage = order => {
     const { fileSystem } = this.props;
-    const {
-      updatePosition,
-      updateCurrentFile,
-      resetImagePosition,
-    } = this.props;
+    const { updatePosition, resetImagePosition } = this.props;
     const { fileList, currentPosition } = fileSystem;
+    const { scale, imagePosition, zoomMode } = getViewModes();
     if (this.updating) return;
     this.updating = true;
 
     if (fileList.length === currentPosition) return;
     let newPosition = currentPosition + order;
-    if (newPosition > fileList.length - 1) newPosition = 0;
-    if (newPosition < 0) newPosition = fileList.length - 1;
+    newPosition = mod(newPosition, fileList.length);
+    // if (newPosition > fileList.length - 1) newPosition = 0;
+    // if (newPosition < 0) newPosition = fileList.length - 1;
 
     const newFile = fileList[newPosition];
     updatePosition(newPosition);
-    updateCurrentFile(newFile);
-    resetImagePosition();
+    // updateCurrentFile(newFile);
+    if (zoomMode === 0 && scale !== 1) resetImagePosition();
 
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
@@ -241,6 +296,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
+  setZoomMode: payload => ({ type: types.SET_ZOOM_MODE, payload }),
   setZoomFree: () => ({ type: types.ZOOM_FREE }),
   updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),
   updateImagePosition: payload => ({

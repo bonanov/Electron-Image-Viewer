@@ -3,6 +3,7 @@ export const UPDATE_BG_COLOR = 'UPDATE_BG_COLOR';
 export const ZOOM_FIT = 'ZOOM_FIT';
 export const ZOOM_EXPAND = 'ZOOM_EXPAND';
 export const ZOOM_FREE = 'ZOOM_FREE';
+export const SET_ZOOM_MODE = 'SET_ZOOM_MODE';
 export const TOGGLE_SHUFFLE = 'TOGGLE_SHUFFLE';
 export const TOGGLE_UI_HIDDEN = 'TOGGLE_UI_HIDDEN';
 export const HIDE_UI = 'HIDE_UI';

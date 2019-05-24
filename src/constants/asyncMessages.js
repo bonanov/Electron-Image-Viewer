@@ -64,3 +64,17 @@ export const sendBlured = ({ fullPath, base64 }) => ({
     base64,
   },
 });
+
+export const sendFileList = ({ fileList }) => ({
+  type: 'SEND_FILELIST',
+  data: {
+    fileList,
+  },
+});
+
+export const getFileList = dir => ({
+  type: 'GET_FILELIST',
+  data: {
+    dir,
+  },
+});
