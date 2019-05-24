@@ -3,6 +3,39 @@ body {
   overflow: hidden;
 }
 
+.blur-container {
+  display: flex;
+  position: relative;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-position: 50%;
+  background-size: cover;
+  transition: 0.4s background-image;
+  will-change: background-image;
+  transition-timing-function: ease-in-out;
+}
+
+.blured {
+  display: none;
+  background-size: 100%;
+  background-position: 50%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  /* height: 100%; */
+  /* width: 100%; */
+  right: 0;
+  z-index: 1;
+  filter: blur(50px);
+  min-height: 100vh;
+  min-width: 100vw;
+  transform: scale(1.3);
+}
+
 .image-container {
   position: fixed;
   top: 0;
@@ -16,9 +49,14 @@ body {
 .image {
   display: flex;
   align-items: center;
-  transition: 0.08s;
+  transition: 0.1s;
   transition-timing-function: cubic-bezier(0, 0, 0, 1);
   margin: auto;
+  will-change: transform;
+}
+
+.image-moving .image {
+  transition: 0s;
 }
 
 .preload-image {
@@ -32,13 +70,15 @@ body {
 }
 
 .preload-overlay {
-  background: #222;
+  background-color: #222;
   z-index: -1;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
+  transition: 0.5s background-color;
+  transition-timing-function: ease-in;
 }
 
 .image-inner {

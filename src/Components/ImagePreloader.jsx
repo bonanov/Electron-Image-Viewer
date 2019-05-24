@@ -5,7 +5,7 @@ class ImagePreloader extends Component {
   state = {};
 
   render() {
-    const { currentPosition, fileList } = this.props;
+    const { currentPosition, fileList, bgColor } = this.props;
 
     const amount = fileList.length;
     if (!fileList.length) return null;
@@ -23,7 +23,10 @@ class ImagePreloader extends Component {
         <div className="preload-image_container">
           <img alt="" className="preload-image" src={nextFilePath} />
           <img alt="" className="preload-image" src={prevFilePath} />
-          <div className="preload-overlay" />
+          <div
+            style={{ backgroundColor: bgColor }}
+            className="preload-overlay"
+          />
         </div>
       </React.Fragment>
     );

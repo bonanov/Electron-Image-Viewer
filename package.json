@@ -8,6 +8,7 @@
   "dependencies": {
     "config": "^3.1.0",
     "electron": "^5.0.1",
+    "fast-average-color": "^5.1.0",
     "font-awesome": "^4.7.0",
     "gm": "^1.23.1",
     "lodash": "^4.17.11",
@@ -18,7 +19,9 @@
     "react-scripts": "3.0.1",
     "react-toastify": "^5.1.0",
     "redux": "^4.0.1",
-    "sharp": "^0.22.1"
+    "sharp": "^0.22.1",
+    "stackblur": "^1.0.0",
+    "stackblur-canvas": "^2.2.0"
   },
   "scripts": {
     "all": "run-p watch electron-dev",
@@ -27,7 +30,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "build-app": "npm-run-all build electron-build",
-    "bundle": "webpack src/resizeWindow/app.js -o src/resizeWindow/bundle.js",
+    "bundle": "webpack src/secondWindow/utilApp.js -o src/secondWindow/bundle.js",
     "electron-rebuild": "electron-rebuild",
     "flow": "flow",
     "test": "react-scripts test --env=jsdom",

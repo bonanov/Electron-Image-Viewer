@@ -1,39 +1,66 @@
-const { ipcRenderer } = window.electron;
-
-export const getProps = path => ({
+export const getProps = fullPath => ({
   type: 'GET_PROPS',
-  window: 'main',
   data: {
-    fullPath: path,
+    fullPath,
   },
 });
 
-export const getResized = ({ path, width, height }) => ({
+export const sendProps = ({ width, height, aspect, fullPath }) => ({
+  type: 'SEND_PROPS',
+  data: {
+    fullPath,
+    width,
+    height,
+    aspect,
+  },
+});
+
+export const getResized = ({ fullPath, width, height }) => ({
   type: 'GET_RESIZED',
-  window: 'main',
   data: {
     width,
     height,
-    fullPath: path,
+    fullPath,
   },
 });
 
-export const sendResized = ({ path, base64 }) => ({
+export const sendResized = ({ fullPath, base64 }) => ({
   type: 'SEND_RESIZED',
-  window: 'main',
   data: {
-    fullPath: path,
+    fullPath,
     base64,
   },
 });
 
-export const sendProps = ({ width, height, aspect, path }) => ({
-  type: 'SEND_PROPS',
-  window: 'second',
+export const getColor = ({ fullPath, buffer }) => ({
+  type: 'GET_COLOR',
   data: {
-    fullPath: path,
+    buffer,
+    fullPath,
+  },
+});
+
+export const sendColor = ({ fullPath, color }) => ({
+  type: 'SEND_COLOR',
+  data: {
+    fullPath,
+    color,
+  },
+});
+
+export const getBlured = ({ fullPath, width, height }) => ({
+  type: 'GET_BLURED',
+  data: {
     width,
     height,
-    aspect,
+    fullPath,
+  },
+});
+
+export const sendBlured = ({ fullPath, base64 }) => ({
+  type: 'SEND_BLURED',
+  data: {
+    fullPath,
+    base64,
   },
 });

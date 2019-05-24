@@ -1,6 +1,5 @@
 /* eslint no-restricted-globals: ["error", "event"] */
 const sharp = require('sharp');
-// $(npm bin)/webpack src/resizeWindow/app.js -o src/resizeWindow/bundle.js
 
 // export default () => {
 const resizeImage = ({ path, width, height }) => {

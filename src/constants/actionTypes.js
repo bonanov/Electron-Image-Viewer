@@ -1,4 +1,5 @@
 export const TOGGLE_ZOOM_MODE = 'TOGGLE_ZOOM_MODE';
+export const UPDATE_BG_COLOR = 'UPDATE_BG_COLOR';
 export const ZOOM_FIT = 'ZOOM_FIT';
 export const ZOOM_EXPAND = 'ZOOM_EXPAND';
 export const ZOOM_FREE = 'ZOOM_FREE';
@@ -9,6 +10,9 @@ export const SHOW_UI = 'SHOW_UI';
 export const UPDATE_SCALE = 'SET_SCALE';
 export const UPDATE_FILESYSTEM = 'UPDATE_FILESYSTEM';
 export const SET_SHUFFLE = 'SET_SHUFFLE';
+export const UPDATE_IMAGE_POSITION = 'UPDATE_IMAGE_POSITION';
+export const RESET_IMAGE_POSITION = 'RESET_IMAGE_POSITION';
+
 // files
 export const UPDATE_FILELIST = 'UPDATE_FILELIST';
 export const UPDATE_CURRENT_FILE = 'UPDATE_CURRENT_FILE';

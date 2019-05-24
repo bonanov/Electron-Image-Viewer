@@ -52,7 +52,7 @@ class FSInterface extends Component {
     updateDir(dir);
     updateCurrentFile(list[0]);
     setShuffle(false);
-    const callback = this.setPosition;
+    const callback = this.findPosition;
     if (handleDir) this.initializeDirectory(dir, callback);
     if (!handleDir) this.initializeFileList(list, callback);
   };
@@ -74,11 +74,11 @@ class FSInterface extends Component {
     }
 
     await toggleShuffle();
-    this.setPosition({ fileList: clone(newList) });
+    this.findPosition({ fileList: clone(newList) });
   };
 
-  setPosition = (objects?) => {
-    const { fileSystem, updatePosition, updateFileSystem } = this.props;
+  findPosition = (objects?) => {
+    const { fileSystem, updateFileSystem } = this.props;
     const { fileList: list, currentFile } = fileSystem;
     const fileList = objects && objects.fileList ? objects.fileList : list;
 
@@ -113,10 +113,10 @@ class FSInterface extends Component {
     fileNameList.forEach(fileName => {
       const type = this.getFileType(fileName);
       const object = {
-        fileName,
-        fullPath: dir + fileName,
+        fileName: fileName.replace(/\?/g, '%3F'),
+        fullPath: (dir + fileName).replace(/\?/g, '%3F'),
         url: '',
-        dir,
+        dir: dir.replace(/\?/g, '%3F'),
         size: '',
         lastModified: '',
         isUrl: false,
@@ -171,15 +171,17 @@ class FSInterface extends Component {
       <React.Fragment>
         <DropArea onDrop={this.handleFiles} />
         <FileHandler
+          onRef={ref => (this.imageEl = ref)}
           onFileError={this.handleFileError}
           // imageEl={this.imageEl}
           currentFile={currentFile}
         />
 
         <GUI
+          imageEl={this.imageEl}
           onShuffle={this.handleToggleShuffle}
           FSInterface={this}
-          imageEl={this.imageEl}
+          // onRef={onRef}
         />
       </React.Fragment>
     );

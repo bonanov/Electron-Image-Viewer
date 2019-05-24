@@ -5,9 +5,26 @@ const initialState = {
   shuffle: false,
   uiHidden: false,
   scale: 1,
+  bgColor: '#222',
+  imagePosition: {
+    x: 0,
+    y: 0,
+  },
 };
 
 const viewModes = (state = initialState, action) => {
+  if (action.type === types.UPDATE_IMAGE_POSITION) {
+    return { ...state, imagePosition: { ...action.payload } };
+  }
+
+  if (action.type === types.RESET_IMAGE_POSITION) {
+    return { ...state, imagePosition: { x: 0, y: 0 } };
+  }
+
+  if (action.type === types.UPDATE_BG_COLOR) {
+    return { ...state, bgColor: action.payload };
+  }
+
   if (action.type === types.TOGGLE_ZOOM_MODE) {
     const { zoomMode } = state;
     let newZoomMode;

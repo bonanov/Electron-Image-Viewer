@@ -9,7 +9,7 @@ class ImageContainer extends Component {
 
   getStyle = () => {
     const { viewModes, fileSystem } = this.props;
-    const { scale, zoomMode } = viewModes;
+    const { scale, zoomMode, imagePosition } = viewModes;
     const { fileProps } = fileSystem.currentFile;
     if (!fileProps) return;
     const { width, height } = fileProps;
@@ -18,42 +18,58 @@ class ImageContainer extends Component {
     if (zoomMode === 0) scaleValue = scale;
     if (zoomMode === 1) scaleValue = 1;
     if (zoomMode === 2) {
-      const elementWidth = this.imageEl.offsetWidth;
+      const image = this.imageEl.querySelector('.image-inner');
+      const elementWidth = image.offsetWidth;
       scaleValue = width / elementWidth;
     }
-
-    const transform = `scale(${scaleValue})`;
+    const { x, y } = imagePosition;
+    const transform = `translateX(${x}px) translateY(${y}px) scale(${scaleValue})`;
     const style = {
       transform,
     };
     return style;
   };
 
+  handleRef = ref => {
+    const { onRef } = this.props;
+    onRef(ref);
+    this.imageEl = ref;
+  };
+
   render() {
-    const { fileSystem, viewModes, base64 } = this.props;
+    const { fileSystem, viewModes, base64, base64Bg, onRef } = this.props;
     // const { fullPath, base64 } = fileSystem.currentFile;
 
     const { currentPosition, fileList } = fileSystem;
     const currentFile = fileList[currentPosition];
     if (!currentFile) return null;
-    const { fullPath } = currentFile;
+    const { fullPath, type } = currentFile;
 
     const zoomFit = viewModes.zoomMode === 1;
     const style = this.getStyle();
     const noScale = viewModes.scale <= 1;
     const src = base64 && (zoomFit || noScale) ? base64 : formatPath(fullPath);
     return (
-      <div className="image-container">
-        <div style={{ ...style }} className="image">
-          {src && (
-            <img
-              ref={ref => (this.imageEl = ref)}
-              className="image-inner"
-              src={src}
-            />
+      <React.Fragment>
+        {/* TODO: use flozz/StackBlur instead */}
+        {/* <div style={{ backgroundImage: `url(${src})` }} className="blured" /> */}
+        <div
+          style={{ backgroundImage: `url(${base64Bg})` }}
+          className="blur-container"
+        >
+          {type !== 'gif' && (
+            <img src={formatPath(fullPath)} className="blured" />
           )}
         </div>
-      </div>
+        <div
+          ref={this.handleRef}
+          className="image-container image-container-selector"
+        >
+          <div style={{ ...style }} className="image">
+            {src && <img className="image-inner" src={src} />}
+          </div>
+        </div>
+      </React.Fragment>
     );
   }
 }
