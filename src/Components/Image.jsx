@@ -3,7 +3,11 @@ import { toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
 import * as types from '../constants/actionTypes.js';
-import { getCurrentFile, getViewModes } from '../utils/getValueFromStore';
+import {
+  getCurrentFile,
+  getViewModes,
+  getFileSystem,
+} from '../utils/getValueFromStore';
 
 class ImageContainer extends Component {
   imageEl = null;
@@ -40,27 +44,31 @@ class ImageContainer extends Component {
     const { zoomMode, scale } = getViewModes();
     // const { fullPath, base64 } = fileSystem.currentFile;
 
-    const { currentPosition, fileList } = fileSystem;
-    const currentFile = fileList[currentPosition];
+    const currentFile = getCurrentFile();
     if (!currentFile) return null;
-    const { fullPath, type } = currentFile;
+    const { fullPath, type, blurBlob } = currentFile;
+    const { currentBlob } = getFileSystem();
 
     const zoomFit = zoomMode === 1;
     const noScale = scale <= 1;
     const style = this.getStyle();
-    const src = base64 && (zoomFit || noScale) ? base64 : formatPath(fullPath);
+    if (blurBlob) this.blob = blurBlob;
+    const src = noScale && currentBlob ? currentBlob : formatPath(fullPath);
     return (
       <React.Fragment>
         {/* TODO: use flozz/StackBlur instead */}
         {/* <div style={{ backgroundImage: `url(${src})` }} className="blured" /> */}
-        <div
-          style={{ backgroundImage: `url(${base64Bg})` }}
-          className="blur-container"
-        >
-          {type !== 'gif' && (
-            <img src={formatPath(fullPath)} className="blured" />
-          )}
-        </div>
+        {(blurBlob || this.blob) && (
+          <div
+            style={{ backgroundImage: `url(${blurBlob || this.blob})` }}
+            className="blur-container"
+          >
+            {type !== 'gif' && (
+              <img src={formatPath(fullPath)} className="blured" />
+            )}
+          </div>
+        )}
+
         <div
           ref={this.handleRef}
           className="image-container image-container-selector"

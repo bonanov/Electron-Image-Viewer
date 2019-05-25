@@ -7,7 +7,7 @@ import ImageContainer from './Image';
 import { handleResizeImage, getFileProps } from '../utils/imageProcessing';
 import * as types from '../constants/actionTypes';
 import * as message from '../constants/asyncMessages';
-import { formatFullPath, formatPath } from '../utils/base';
+import { formatFullPath, formatPath, getBlobFromBase64 } from '../utils/base';
 import {
   getCurrentFilePath,
   getCurrentFile,
@@ -15,6 +15,7 @@ import {
   getFileSystem,
   getClosestNFiles,
   getViewModes,
+  getFilePositionByPath,
 } from '../utils/getValueFromStore';
 
 const fac = new FastAverageColor();
@@ -63,37 +64,38 @@ class FileHandler extends Component {
   }
 
   async componentDidUpdate(prevProps) {
-    const { fileList, currentPosition } = this.props.fileSystem;
+    const { fileList, currentPosition } = getFileSystem();
     const currentFile = fileList[currentPosition];
     const newPosition = prevProps.fileSystem.currentPosition;
     const prevFile = prevProps.fileSystem.fileList[newPosition];
-    if (!prevFile || !currentFile) return;
-
-    if (prevFile.fullPath !== currentFile.fullPath) {
+    if (!currentFile) return;
+    if (!prevFile || prevFile.fullPath !== currentFile.fullPath) {
       this.handleFileChange();
     }
   }
 
-  handleFileChange() {
+  handleFileChange = async () => {
+    const { updateCurrentBlob } = this.props;
     const currentFile = getInitialFile();
     const { type } = currentFile;
-
-    this.handleBlur();
-    this.setState({ base64: '' });
     this.handleProps();
+    // this.handleBlur();
+    // updateCurrentBlob('');
     this.handleScale();
-    if (type !== 'gif') this.handleResize();
-  }
+    // if (type !== 'gif') this.handleResize();
+  };
 
   handleScale = () => {
     const { zoomMode } = getViewModes();
     const { fileProps } = getCurrentFile();
     const { updateScale } = this.props;
+    if (!fileProps) return;
     if (zoomMode !== 2) return;
     const image = this.imageEl.querySelector('.image-inner');
     const elementWidth = image.offsetWidth;
     const scale = fileProps.width / elementWidth;
     updateScale(scale);
+    // this.handleResize();
   };
 
   handleColor = () => {
@@ -114,42 +116,47 @@ class FileHandler extends Component {
   };
 
   handleBlur = () => {
-    const fullPath = getCurrentFilePath();
+    const { fullPath, blurBlob } = getCurrentFile();
     if (!fullPath) return;
 
     const { innerHeight: height, innerWidth: width } = window;
     const aspect = Math.round(width / height);
     const newMessage = {
       fullPath,
-      width,
-      height,
+      width: 200,
+      height: 200 / aspect,
     };
-    ipcRenderer.send(
-      'asynchronous-message',
-      message.getBlured({ ...newMessage, width: 200, height: 200 / aspect })
-    );
+
+    const closestFiles = getClosestNFiles(1);
+
+    closestFiles.forEach(file => {
+      if (file.blurBlob) return;
+      ipcRenderer.send(
+        'asynchronous-message',
+        message.getBlured({ ...newMessage, fullPath: file.fullPath })
+      );
+    });
+
+    if (blurBlob) return;
+    ipcRenderer.send('asynchronous-message', message.getBlured(newMessage));
   };
 
-  setBlur = ({ base64, fullPath: path }) => {
-    const fullPath = getCurrentFilePath();
-    if (!fullPath) return;
-    if (path !== fullPath) return;
+  setBlur = async ({ base64, fullPath: path }) => {
+    // const { fullPath, blurBlob } = getCurrentFilePath();
+    const { fileList } = getFileSystem();
+    const { updateFileList } = this.props;
+    // if (!fullPath) return;
+    // if (path !== fullPath) return;
     // updateBase64(base64);
-    // TODO: store blured image in store as a blob
-    this.setState({ base64Bg: base64 });
-  };
+    const blob = await getBlobFromBase64(base64);
 
-  handleResize = () => {
-    const fullPath = getCurrentFilePath();
-    if (!fullPath) return;
-    const { innerHeight: height, innerWidth: width } = window;
-    const aspect = Math.round(width / height);
-    const newMessage = {
-      fullPath,
-      width,
-      height,
-    };
-    ipcRenderer.send('asynchronous-message', message.getResized(newMessage));
+    const position = getFilePositionByPath(path);
+    const clonedList = clone(fileList);
+
+    clonedList[position].blurBlob = blob;
+    updateFileList(clonedList);
+
+    // this.setState({ base64Bg: base64 });
   };
 
   handleProps = () => {
@@ -168,32 +175,55 @@ class FileHandler extends Component {
   };
 
   setProps = async data => {
-    const { updateFileProps, onFileError, updateFileList } = this.props;
-    const { fileList, currentPosition } = getFileSystem();
-    const fullPath = getCurrentFilePath();
-    if (!fullPath) return;
+    const { onFileError, updateFileList } = this.props;
+    const { fileList } = getFileSystem();
 
     const { width, height, aspect, err, fullPath: path } = data;
 
     if (err) {
       // toast.error(err.message);
-      onFileError(fullPath);
+      onFileError(data);
       return;
     }
 
-    const proppedFile = fileList.find(file => file.fullPath === data.fullPath);
-    const position = fileList.indexOf(proppedFile);
+    const position = getFilePositionByPath(path);
     const clonedList = clone(fileList);
     // if (clonedList[position].fileProps) return;
     clonedList[position].fileProps = { width, height, aspect };
     updateFileList(clonedList);
   };
 
-  setResized = ({ base64, fullPath: path }) => {
+  handleResize = () => {
+    return;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
+
+    const { innerHeight, innerWidth } = window;
+    const image = this.imageEl.querySelector('.image');
+    const { height, width } = image.getBoundingClientRect();
+    const newMessage = {
+      fullPath,
+      width: innerWidth,
+      height: innerHeight,
+    };
+
+    ipcRenderer.send('asynchronous-message', message.getResized(newMessage));
+  };
+
+  setResized = async ({ base64, fullPath: path }) => {
+    const { updateCurrentBlob } = this.props;
+    // const { fileList } = getFileSystem();
+    // const position = getFilePositionByPath(path);
+    // const clonedList = clone(fileList);
+    // clonedList[position].resizedBlob = base64;
+    // console.log(base64);
+    const fullPath = getCurrentFilePath();
+    if (!fullPath) return;
+    const blob = await getBlobFromBase64(base64);
     if (path !== fullPath) return;
-    this.setState({ base64 });
+    // this.setState({ base64 });
+    updateCurrentBlob(blob);
+    // updateFileList(clonedList);
   };
 
   handleRef = ref => {
@@ -228,6 +258,7 @@ const mapDispatchToProps = {
   updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
   updateFileProps: payload => ({ type: types.UPDATE_FILE_PROPS, payload }),
   updateBase64: payload => ({ type: types.UPDATE_BASE64, payload }),
+  updateCurrentBlob: payload => ({ type: types.UPDATE_CURRENT_BLOB, payload }),
 };
 
 export default connect(

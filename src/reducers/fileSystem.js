@@ -6,6 +6,8 @@ const initialState = {
   currentPosition: 0,
   base64: '',
   dir: '',
+  blurBlob: '',
+  currentBlob: '',
 };
 
 const fileSystem = (state = initialState, action) => {
@@ -22,6 +24,10 @@ const fileSystem = (state = initialState, action) => {
 
   if (action.type === types.UPDATE_BASE64) {
     return { ...state, base64: action.payload };
+  }
+
+  if (action.type === types.UPDATE_CURRENT_BLOB) {
+    return { ...state, currentBlob: action.payload };
   }
 
   if (action.type === types.UPDATE_FILE_PROPS) {

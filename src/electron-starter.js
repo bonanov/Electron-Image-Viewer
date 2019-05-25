@@ -26,6 +26,8 @@ function createWindow() {
     height: 800,
     frame: true,
     show: false,
+    title: 'bonana image viewer',
+    icon: path.join(__dirname, 'assets/icons/64x64.png'),
     webPreferences,
   });
 
@@ -97,7 +99,7 @@ function createForthWindow() {
   const startUrl = url.format({
     pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
     protocol: 'file:',
-    slashes: true,
+    slashes: false,
   });
 
   forthWindow.loadURL(startUrl);

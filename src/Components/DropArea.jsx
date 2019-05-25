@@ -99,7 +99,7 @@ class DropArea extends Component {
   formatFileObject = file => {
     const id = Math.floor(Math.random() * Date.now());
     const dir = file.path.replace(file.name, '');
-    const type = file.type.replace('image/', '');
+    const type = file.type.replace('image/', '').toLowerCase();
     // const supportedFile = this.isSupportedType(type);
     // if (!supportedFile) return;
     const fileObject = {

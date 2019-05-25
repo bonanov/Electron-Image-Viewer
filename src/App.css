@@ -13,7 +13,7 @@ body {
   right: 0;
   background-position: 50%;
   background-size: cover;
-  transition: 0.4s background-image;
+  transition: 0.1s background-image;
   will-change: background-image;
   transition-timing-function: ease-in-out;
 }

@@ -77,9 +77,15 @@ class FSInterface extends Component {
     if (!handleDir) this.initializeFileList(list, callback);
   };
 
-  handleDirectory = ({ fileList }) => {
+  handleDirectory = ({ fileList: oldList }) => {
     const { updateFileList, updatePosition } = this.props;
     const initialFile = getInitialFile();
+    const fileList = clone(oldList).sort((a, b) => {
+      if (a.mtime < b.mtime) return 1;
+      if (a.mtime > b.mtime) return -1;
+      return 0;
+    });
+
     const currentFile = fileList.filter(
       file => file.fullPath === initialFile.fullPath
     )[0];
@@ -124,6 +130,7 @@ class FSInterface extends Component {
   initializeFileList = async (fileList, callback?) => {
     const { updateFileList } = this.props;
     const listFiltered = await this.filterFileList(fileList);
+    console.log(listFiltered);
     updateFileList(listFiltered);
   };
 

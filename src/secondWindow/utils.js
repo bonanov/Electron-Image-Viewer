@@ -17,9 +17,9 @@ export const blurImage = async ({ fullPath, width, height }) => {
   const pngBase64Prefix = 'data:image/png;base64,';
   const base64 = await new Promise((resolve, reject) => {
     sharp(fullPath)
-      .resize(width, height, {
+      .resize(Math.round(width), height, {
         fit: sharp.fit.fill,
-        kernel: sharp.kernel.cubic,
+        kernel: sharp.kernel.nearest,
         withoutEnlargement: true,
       })
       .blur(15)
@@ -36,7 +36,7 @@ export const resizeImage = async ({ fullPath, width, height }) => {
   const pngBase64Prefix = 'data:image/png;base64,';
   const base64 = await new Promise((resolve, reject) => {
     sharp(fullPath)
-      .resize(width, height, {
+      .resize(Math.round(width), Math.round(height), {
         fit: sharp.fit.inside,
         kernel: sharp.kernel.lanczos3,
         withoutEnlargement: true,
@@ -60,16 +60,18 @@ export const getFileProps = async filePath => {
 };
 
 const getFileSize = async dir => {
+  console.log(dir);
   const fileSize = await new Promise((resolve, reject) => {
     gm(dir).size(async (err, size) => {
       if (err) return resolve({ err });
+      console.log(size);
       resolve({ width: size.width, height: size.height });
     });
   });
   return { ...fileSize };
 };
 
-const isSupportedType = type => !!FILE_TYPES.includes(type);
+const isSupportedType = type => !!FILE_TYPES.includes(type.toLowerCase());
 
 const filterFileList = list => {
   const newList = list.filter(item => isSupportedType(item.type));
@@ -78,9 +80,10 @@ const filterFileList = list => {
 
 const getFileType = name => name.replace(FILE_EXT, '$1');
 
-const formatFileObject = (fileNameList, dir) => {
+const formatFileObject = async (fileNameList, dir) => {
   const fileList = [];
-  fileNameList.forEach(fileName => {
+  await fileNameList.forEach(async fileName => {
+    const { mtimeMs, atimeMs, ctimeMs } = await fs.statSync(dir + fileName);
     const id = Math.floor(Math.random() * Date.now());
     const type = getFileType(fileName);
     const object = {
@@ -89,7 +92,9 @@ const formatFileObject = (fileNameList, dir) => {
       url: '',
       dir: dir.replace(/\?/g, '%3F'),
       size: '',
-      lastModified: '',
+      mtime: mtimeMs,
+      atime: atimeMs,
+      ctime: ctimeMs,
       isUrl: false,
       type,
       id,
@@ -101,9 +106,9 @@ const formatFileObject = (fileNameList, dir) => {
 
 export const getDirectory = async dir => {
   const files = await new Promise(resolve => {
-    fs.readdir(dir, (err, fileList) => {
-      const list = formatFileObject(fileList, dir);
-      const listFiltered = filterFileList(list);
+    fs.readdir(dir, async (err, fileList) => {
+      const list = await formatFileObject(fileList, dir);
+      const listFiltered = await filterFileList(list);
       resolve(listFiltered);
     });
   });

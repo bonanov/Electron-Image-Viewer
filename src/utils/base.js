@@ -80,6 +80,14 @@ export function toggleFullscreen(event) {
   // eslint-disable-next-line no-unused-expressions
   isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
 }
+
+export const getBlobFromBase64 = async b64Data => {
+  // const url = `b64Data`;
+  const response = await fetch(b64Data);
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+};
+
 export const mod = (n, m) => ((n % m) + m) % m;
 
 export const spinArrayPosition = (arr, position) => mod(position, arr.length);

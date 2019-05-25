@@ -5,6 +5,7 @@ import * as types from '../constants/actionTypes.js';
 import PositionPanel from './PositionPanel';
 import ControlPanel from './ControlPanel';
 import ImagePreloader from './ImagePreloader';
+import * as message from '../constants/asyncMessages';
 import {
   HIDE_TIMEOUT,
   CONTROL_PANEL_SEL,
@@ -15,7 +16,10 @@ import {
   getCurrentFile,
   getInitialFile,
   getViewModes,
+  getCurrentFilePath,
 } from '../utils/getValueFromStore.js';
+
+const { ipcRenderer } = window.electron;
 
 class GUI extends Component {
   constructor() {
@@ -29,6 +33,7 @@ class GUI extends Component {
     this.transitionEnded = true;
     this.transitionTimer = null;
     this.hideTimer = null;
+    this.wheelTimer = null;
     this.state = {
       moving: false,
     };
@@ -97,25 +102,25 @@ class GUI extends Component {
 
   handleMouseMove = e => {
     e.preventDefault();
+    const { uiHidden } = getViewModes();
     const { moving } = this.state;
     const { target } = e;
     this.handlePanelsHide(target);
 
     if (!moving) return;
-    this.handleImageMove(e);
+    const { clientX, clientY } = e;
+    this.handleImageMove({ clientX, clientY });
   };
 
-  handleImageMove = e => {
+  handleImageMove = ({ clientX, clientY }) => {
     const { updateImagePosition } = this.props;
-    const { imageEl, viewModes } = this.props;
+    const { imageEl } = this.props;
     if (!imageEl) return;
 
-    const { clientX, clientY } = e;
     const offsetX = clientX - this.offsetX;
     const offsetY = clientY - this.offsetY;
     const x = offsetX + this.initX;
     const y = offsetY + this.initY;
-
     updateImagePosition({ x, y });
   };
 
@@ -131,10 +136,13 @@ class GUI extends Component {
   handlePanelsHide = target => {
     const { hideUi, showUi, viewModes } = this.props;
     const { moving } = this.state;
-    if (moving) return hideUi();
+    if (moving && !viewModes.uiHidden) {
+      hideUi();
+      return;
+    }
     clearTimeout(this.hideTimer);
 
-    if (viewModes.uiHidden) {
+    if (!moving && viewModes.uiHidden) {
       showUi();
     }
 
@@ -145,7 +153,26 @@ class GUI extends Component {
   handleWheel = e => {
     const delta = e.deltaY > 0 ? -1 : 1;
     const { clientX, clientY } = e;
+
     this.handleZoom({ delta, clientX, clientY });
+    const { imageEl } = this.props;
+    if (!imageEl) return;
+    // clearTimeout(this.wheelTimer);
+    // this.wheelTimer = setTimeout(this.handleWheelResize, 100);
+  };
+
+  handleWheelResize = () => {
+    const { imageEl } = this.props;
+    const fullPath = getCurrentFilePath();
+    const { innerHeight, innerWidth } = window;
+    const image = imageEl.querySelector('.image-inner');
+    const { height, width } = image.getBoundingClientRect();
+    const newMessage = {
+      fullPath,
+      width: width || innerWidth,
+      height: height || innerHeight,
+    };
+    ipcRenderer.send('asynchronous-message', message.getResized(newMessage));
   };
 
   handleZoom = async ({ delta, initialScale, clientX, clientY }) => {
@@ -155,10 +182,10 @@ class GUI extends Component {
     const { scale } = viewModes;
     // if (!this.transitionEnded) return;
     // this.transitionEnded = false;
-    // if (zoomMode !== 0) {
-    //   scale = 1;
-    setZoomFree();
-    // }
+    if (zoomMode !== 0) {
+      //   scale = 1;
+      setZoomFree();
+    }
 
     const mult = Math.exp(scale / 2);
 

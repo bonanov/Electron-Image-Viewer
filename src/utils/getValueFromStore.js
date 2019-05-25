@@ -1,3 +1,4 @@
+import { clone } from 'lodash';
 import { store as _store } from '../reducers';
 import { mod } from './base';
 
@@ -21,6 +22,8 @@ export const getCurrentFile = () => {
   return getFileAtNPosition(currentPosition);
 };
 
+export const getFileByPath = () => {};
+
 export const getCurrentFilePath = () => {
   const currentFile = getCurrentFile();
   if (!currentFile) return;
@@ -37,4 +40,10 @@ export const getClosestNFiles = n => {
     array.push(getFileAtNPosition(currentPosition + i));
   }
   return array;
+};
+
+export const getFilePositionByPath = path => {
+  const { fileList } = getFileSystem();
+  const findedFile = fileList.find(file => file.fullPath === path);
+  return fileList.indexOf(findedFile);
 };

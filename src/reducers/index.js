@@ -11,7 +11,10 @@ let tempStore;
 if (process.env.NODE_ENV === 'development') {
   tempStore = createStore(
     reducer,
-    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+    window.__REDUX_DEVTOOLS_EXTENSION__ &&
+      window.__REDUX_DEVTOOLS_EXTENSION__({
+        actionsBlacklist: ['SHOW_UI', 'HIDE_UI', 'SET_SCALE'],
+      })
   );
 } else {
   tempStore = createStore(reducer);
