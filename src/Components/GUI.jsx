@@ -5,21 +5,28 @@ import * as types from '../constants/actionTypes.js';
 import PositionPanel from './PositionPanel';
 import ControlPanel from './ControlPanel';
 import ImagePreloader from './ImagePreloader';
+import Popups from './Popups/base';
 import * as message from '../constants/asyncMessages';
 import {
   HIDE_TIMEOUT,
   CONTROL_PANEL_SEL,
   IMAGE_CONTAINER_SEL,
 } from '../constants/base';
-import { shuffleFunc, toggleFullscreen, mod } from '../utils/base.js';
+import { toggleFullscreen, mod } from '../utils/base.js';
 import {
   getCurrentFile,
-  getInitialFile,
   getViewModes,
   getCurrentFilePath,
+  removeFileFromList,
+  getFileAtNPosition,
+  getFileSystem,
 } from '../utils/getValueFromStore.js';
 
 const { ipcRenderer } = window.electron;
+
+const { remote } = window.electron;
+const fs = remote.require('fs');
+const trash = window.trash;
 
 class GUI extends Component {
   constructor() {
@@ -34,6 +41,7 @@ class GUI extends Component {
     this.transitionTimer = null;
     this.hideTimer = null;
     this.wheelTimer = null;
+    this.undoRemoveTime = null;
     this.state = {
       moving: false,
     };
@@ -102,7 +110,6 @@ class GUI extends Component {
 
   handleMouseMove = e => {
     e.preventDefault();
-    const { uiHidden } = getViewModes();
     const { moving } = this.state;
     const { target } = e;
     this.handlePanelsHide(target);
@@ -175,9 +182,9 @@ class GUI extends Component {
     ipcRenderer.send('asynchronous-message', message.getResized(newMessage));
   };
 
-  handleZoom = async ({ delta, initialScale, clientX, clientY }) => {
+  handleZoom = async ({ delta, initialScale }) => {
     const { updateScale, setZoomFree } = this.props;
-    const { viewModes, imageEl } = this.props;
+    const { viewModes } = this.props;
     const { zoomMode } = viewModes;
     const { scale } = viewModes;
     // if (!this.transitionEnded) return;
@@ -206,7 +213,6 @@ class GUI extends Component {
     const { width, height } = imageEl
       .querySelector('.image-inner')
       .getBoundingClientRect();
-    console.log(width);
     const { innerHeight, innerWidth } = window;
     const imageDims = width * height;
     const windowDims = innerHeight * innerWidth;
@@ -216,16 +222,11 @@ class GUI extends Component {
   handleZoomToggle = () => {
     const { fileProps } = getCurrentFile();
 
-    const {
-      toggleZoomMode,
-      resetImagePosition,
-      setZoomMode,
-      updateScale,
-    } = this.props;
-    const { viewModes, fileSystem, imageEl } = this.props;
+    const { resetImagePosition, setZoomMode, updateScale } = this.props;
+    const { viewModes, imageEl } = this.props;
 
     if (!fileProps) return;
-    const { width, height } = fileProps;
+    const { width } = fileProps;
 
     switch (viewModes.zoomMode) {
       case 0:
@@ -256,22 +257,39 @@ class GUI extends Component {
 
   handleShiftImage = order => {
     const { fileSystem } = this.props;
-    const { updatePosition, resetImagePosition } = this.props;
+    const {
+      updatePosition,
+      resetImagePosition,
+      updateFileList,
+      setZoomMode,
+      updateScale,
+    } = this.props;
     const { fileList, currentPosition } = fileSystem;
-    const { scale, imagePosition, zoomMode } = getViewModes();
+    const { scale, zoomMode } = getViewModes();
     if (this.updating) return;
     this.updating = true;
 
     if (fileList.length === currentPosition) return;
     let newPosition = currentPosition + order;
     newPosition = mod(newPosition, fileList.length);
-    // if (newPosition > fileList.length - 1) newPosition = 0;
-    // if (newPosition < 0) newPosition = fileList.length - 1;
 
     const newFile = fileList[newPosition];
-    updatePosition(newPosition);
-    // updateCurrentFile(newFile);
-    if (zoomMode === 0 && scale !== 1) resetImagePosition();
+    if (!newFile) return;
+
+    const isExist = fs.existsSync(newFile.fullPath);
+    if (!isExist) {
+      const newList = removeFileFromList(newFile.fullPath);
+      updateFileList(newList);
+      updatePosition(mod(newPosition, newList.length));
+    } else {
+      updatePosition(newPosition);
+    }
+
+    if (scale !== 1) {
+      resetImagePosition();
+      setZoomMode(1);
+      updateScale(1);
+    }
 
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
@@ -279,38 +297,82 @@ class GUI extends Component {
     }, 50);
   };
 
-  render() {
-    const { onShuffle, imageEl } = this.props;
-    const { viewModes, fileSystem } = this.props;
+  handleFileDelete = async () => {
+    const {
+      updateFileList,
+      updatePosition,
+      updateTrash,
+      addPopup,
+      removePopup,
+    } = this.props;
+    const { currentPosition } = getFileSystem();
+    const currentFile = getCurrentFile();
+    if (!currentFile) return;
+    const fileList = removeFileFromList(currentFile.fullPath);
 
+    updateFileList(fileList);
+    updatePosition(mod(currentPosition, fileList.length));
+
+    const trashed = await trash([currentFile.fullPath]);
+
+    const trashFile = {
+      trashPath: trashed[0].path,
+      initialPath: currentFile.fullPath,
+    };
+    updateTrash(trashFile);
+    addPopup('undoRemove');
+    clearTimeout(this.undoRemoveTime);
+    this.undoRemoveTime = setTimeout(() => {
+      removePopup('undoRemove');
+    }, 3000);
+  };
+
+  mainGui = () => {
+    const { viewModes, fileSystem } = this.props;
+    const { currentPosition, fileList } = fileSystem;
+    const { onShuffle, imageEl } = this.props;
+    const currentFile = getCurrentFile();
+    if (!imageEl || !currentFile) return null;
+    return (
+      <React.Fragment>
+        <PositionPanel
+          hidden={viewModes.uiHidden}
+          amount={fileList.length}
+          currentPosition={currentPosition}
+        />
+        <ControlPanel
+          onFileDelete={this.handleFileDelete}
+          onShiftImage={this.handleShiftImage}
+          onZoomChange={this.handleZoomToggle}
+          zoomMode={viewModes.zoomMode}
+          randomMode={viewModes.shuffle}
+          hidden={viewModes.uiHidden}
+          onToggleShuffle={onShuffle}
+        />
+      </React.Fragment>
+    );
+  };
+
+  preloader = () => {
+    const { viewModes, fileSystem } = this.props;
     const { bgColor } = viewModes;
     const { currentPosition, fileList } = fileSystem;
-    if (!imageEl) return null;
+    return (
+      <ImagePreloader
+        bgColor={bgColor}
+        currentPosition={currentPosition}
+        fileList={fileList}
+      />
+    );
+  };
+
+  render() {
     return (
       <React.Fragment>
         <ToastContainer />
-        <React.Fragment>
-          <PositionPanel
-            hidden={viewModes.uiHidden}
-            amount={fileList.length}
-            currentPosition={currentPosition}
-          />
-          <ControlPanel
-            onShiftImage={this.handleShiftImage}
-            onZoomChange={this.handleZoomToggle}
-            zoomMode={viewModes.zoomMode}
-            randomMode={viewModes.shuffle}
-            hidden={viewModes.uiHidden}
-            onToggleShuffle={onShuffle}
-          />
-        </React.Fragment>
-        <ImagePreloader
-          bgColor={bgColor}
-          currentPosition={currentPosition}
-          // dirName={dirName}
-          // amount={amount}
-          fileList={fileList}
-        />
+        <Popups />
+        {this.mainGui()}
+        {this.preloader()}
       </React.Fragment>
     );
   }
@@ -323,9 +385,14 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
+  togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
+  addPopup: payload => ({ type: types.ADD_POPUP, payload }),
+  removePopup: payload => ({ type: types.REMOVE_POPUP, payload }),
   setZoomMode: payload => ({ type: types.SET_ZOOM_MODE, payload }),
   setZoomFree: () => ({ type: types.ZOOM_FREE }),
+  updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),
+  updateTrash: payload => ({ type: types.UPDATE_TRASH, payload }),
   updateImagePosition: payload => ({
     type: types.UPDATE_IMAGE_POSITION,
     payload,

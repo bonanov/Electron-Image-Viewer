@@ -22,3 +22,9 @@ export const UPDATE_FILE_PROPS = 'UPDATE_FILE_PROPS';
 export const UPDATE_CURRENT_POSITION = 'UPDATE_CURRENT_POSITION';
 export const UPDATE_DIR = 'UPDATE_DIR';
 export const UPDATE_BASE64 = 'UPDATE_BASE64';
+export const UPDATE_TRASH = 'UPDATE_TRASH';
+
+// popups
+export const TOGGLE_POPUP = 'TOGGLE_POPUP';
+export const ADD_POPUP = 'ADD_POPUP';
+export const REMOVE_POPUP = 'REMOVE_POPUP';

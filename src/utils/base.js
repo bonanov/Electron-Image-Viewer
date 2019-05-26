@@ -1,5 +1,11 @@
+import { FILE_TYPES, FILE_EXT } from '../constants/fileTypes';
+
 const { remote } = window.electron;
 const path = remote.require('path');
+const { argv } = remote.process;
+const { NODE_ENV } = process.env;
+const dev = NODE_ENV === 'development';
+const fs = remote.require('fs');
 
 export const getError = callback => {
   try {
@@ -10,7 +16,7 @@ export const getError = callback => {
 };
 
 export const destructFilePath = filePath => {
-  const dirName = path.dirname(filePath);
+  const dirName = path.dirname(filePath) + '/';
   const fileName = path.basename(filePath);
   return {
     dirName,
@@ -91,3 +97,97 @@ export const getBlobFromBase64 = async b64Data => {
 export const mod = (n, m) => ((n % m) + m) % m;
 
 export const spinArrayPosition = (arr, position) => mod(position, arr.length);
+
+const isSupportedType = type => !!FILE_TYPES.includes(type.toLowerCase());
+
+const filterFileList = list => {
+  const newList = list.filter(item => isSupportedType(item.type));
+  return newList;
+};
+
+const getFileType = name => name.replace(FILE_EXT, '$1');
+
+const formatFileObject = async list => {
+  const fileList = [];
+  await list.forEach(async file => {
+    const { mtimeMs, atimeMs, ctimeMs } = await fs.statSync(file);
+    const id = Math.floor(Math.random() * Date.now());
+    const type = getFileType(file);
+    const { fileName, dirName } = destructFilePath(file);
+    const object = {
+      fileName: fileName.replace(/\?/g, '%3F'),
+      fullPath: (dirName + fileName).replace(/\?/g, '%3F'),
+      url: '',
+      dir: dirName.replace(/\?/g, '%3F'),
+      size: '',
+      mtime: mtimeMs,
+      atime: atimeMs,
+      ctime: ctimeMs,
+      isUrl: false,
+      type,
+      id,
+    };
+    fileList.push(object);
+  });
+  const newList = filterFileList(fileList);
+  return newList;
+};
+
+const getDirectory = async dir => {
+  const files = await new Promise(resolve => {
+    fs.readdir(dir, async (err, fileList) => {
+      const list = await formatFileObject(fileList, dir);
+      const listFiltered = await filterFileList(list);
+      resolve(listFiltered);
+    });
+  });
+  return files;
+};
+
+const getFiles = arg => {
+  const isExist = fs.existsSync(arg);
+  if (!isExist) return;
+  // const isDirectory = fs.lstatSync(arg).isDirectory();
+  const isFile = fs.lstatSync(arg).isFile();
+  if (isFile) {
+    return arg;
+    // console.log(arg);
+    // const file = destructFilePath(arg);
+    // const type = path.extname(arg);
+    // formatFileObject([formatFileObject], file.dirName);
+    // console.log(type);
+    // console.log(file);
+  }
+};
+
+export const parseArguments = async args => {
+  const argList = args.slice(1);
+  const fileList = [];
+  argList.forEach(arg => {
+    const ar = getFiles(arg);
+    if (ar) fileList.push(ar);
+  });
+  if (!fileList) return;
+  const newFileList = {};
+  newFileList.list = await formatFileObject(fileList);
+  const firstFile = newFileList.list[0];
+  if (!firstFile) return;
+  newFileList.dir = firstFile.dir;
+  newFileList.handleDir = true;
+  if (newFileList.list.length > 1) {
+    newFileList.handleDir = false;
+  }
+  return newFileList;
+  // for (let i = 0; i < argv.length; i++) {}
+};
+
+// fileObject = {
+//   id,
+//   fileName: file.name,
+//   fullPath: file.path,
+//   dir,
+//   type,
+//   size: file.size,
+//   lastModified: file.lastModified,
+//   isUrl: false,
+// };

@@ -1,10 +1,11 @@
 const electron = require('electron');
 
-const { app, BrowserWindow, ipcMain } = electron;
-
+const { app, BrowserWindow, ipcMain, Tray, Menu } = electron;
 const path = require('path');
 const url = require('url');
 const { webPreferences } = require('./electron.utils');
+
+const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
@@ -33,10 +34,7 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    mainWindow.webContents.openDevTools();
-    createSecondWindow();
-    createThirdWindow();
-    createForthWindow();
+    // mainWindow.webContents.openDevTools();
   });
 
   const startUrl =
@@ -49,7 +47,12 @@ function createWindow() {
 
   mainWindow.loadURL(startUrl);
 
-  mainWindow.on('closed', closeAllWindows);
+  // mainWindow.on('closed', closeAllWindows);
+  mainWindow.on('closed', () => (mainWindow = null));
+  // mainWindow.on('closed', () => {
+  //   const tray = new Tray(iconPath);
+  //   tray.on('click', () => initWindows);
+  // });
 }
 
 function createSecondWindow() {
@@ -91,7 +94,7 @@ function createThirdWindow() {
 function createForthWindow() {
   forthWindow = new BrowserWindow({
     title: 'electron-props',
-    show: true,
+    show: false,
     webPreferences,
   });
 
@@ -106,11 +109,38 @@ function createForthWindow() {
   forthWindow.on('closed', closeAllWindows);
 }
 
-app.on('ready', createWindow);
+function initWindows() {
+  createSecondWindow();
+  createThirdWindow();
+  createForthWindow();
+  createWindow();
+}
+
+function initTray() {
+  const tray = new Tray(iconPath);
+  tray.on('click', () => {
+    console.log(mainWindow);
+    if (!mainWindow) {
+      createWindow();
+      return;
+    }
+    const windowIsVisible = mainWindow.isVisible();
+    if (windowIsVisible) {
+      mainWindow.hide();
+      return;
+    }
+    mainWindow.show();
+  });
+}
+
+app.on('ready', () => {
+  initWindows();
+  initTray();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    // app.quit();
   }
 });
 
@@ -121,7 +151,6 @@ app.on('active', () => {
 });
 
 ipcMain.on('asynchronous-message', (event, arg) => {
-  // console.log(arg);
   const { data, type } = arg;
   switch (type) {
     case 'GET_PROPS': {

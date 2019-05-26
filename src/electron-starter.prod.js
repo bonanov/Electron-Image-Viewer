@@ -1,15 +1,26 @@
-/* eslint-disable import/no-extraneous-dependencies */
-
 const electron = require('electron');
 
 const { app, BrowserWindow, ipcMain } = electron;
 
 const path = require('path');
 const url = require('url');
+const { webPreferences } = require('./electron.utils');
 
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
+const prod = !!process.env.ELECTRON_START_URL;
+
 let mainWindow;
+let secondWindow;
+let thirdWindow;
+let forthWindow;
+
+function closeAllWindows() {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -17,24 +28,16 @@ function createWindow() {
     height: 800,
     frame: true,
     show: false,
-    transparent: true,
-    webPreferences: {
-      nodeIntergation: true,
-      preload: __dirname + '/preload.js',
-      webSecurity: false,
-    },
+    title: 'bonana image viewer',
+    icon: path.join(__dirname, 'assets/icons/64x64.png'),
+    webPreferences,
   });
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    // mainWindow.webContents.openDevTools();
   });
 
-  // ipcMain.on('mainWindowLoaded', () => {
-  //   const result = knes.select('test').from('test');
-  //   result.then(rows => {
-  //     mainWindow.webContents.send('resultSent', rows);
-  //   });
-  // });
   const startUrl =
     process.env.ELECTRON_START_URL ||
     url.format({
@@ -43,17 +46,89 @@ function createWindow() {
       slashes: true,
     });
 
-  mainWindow.setMenu(null);
   mainWindow.loadURL(startUrl);
-  // mainWindow.webContents.openDevTools();
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  mainWindow.on('closed', closeAllWindows);
 }
-app.commandLine.appendArgument('enable-transparent-visuals');
-// app.on('ready', createWindow);
-app.on('ready', createWindow);
+
+function createSecondWindow() {
+  secondWindow = new BrowserWindow({
+    title: 'electron-props',
+    show: false,
+    webPreferences,
+  });
+
+  // secondWindow.show();
+  const urlDev = url.format({
+    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const urlProd = url.format({
+    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const startUrl = prod ? urlProd : urlDev;
+
+  secondWindow.loadURL(startUrl);
+  secondWindow.on('closed', closeAllWindows);
+}
+
+function createThirdWindow() {
+  thirdWindow = new BrowserWindow({
+    title: 'electron-props',
+    show: false,
+    webPreferences,
+  });
+
+  // thirdWindow.show();
+  const urlDev = url.format({
+    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const urlProd = url.format({
+    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const startUrl = prod ? urlProd : urlDev;
+
+  thirdWindow.loadURL(startUrl);
+  thirdWindow.on('closed', closeAllWindows);
+}
+
+function createForthWindow() {
+  forthWindow = new BrowserWindow({
+    title: 'electron-props',
+    show: false,
+    webPreferences,
+  });
+
+  // forthWindow.show();
+  const urlDev = url.format({
+    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const urlProd = url.format({
+    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
+  const startUrl = prod ? urlProd : urlDev;
+
+  forthWindow.loadURL(startUrl);
+  forthWindow.on('closed', closeAllWindows);
+}
+
+app.on('ready', () => {
+  createSecondWindow();
+  createThirdWindow();
+  createForthWindow();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -64,5 +139,62 @@ app.on('window-all-closed', () => {
 app.on('active', () => {
   if (mainWindow === null) {
     createWindow();
+  }
+});
+
+ipcMain.on('asynchronous-message', (event, arg) => {
+  const { data, type } = arg;
+  switch (type) {
+    case 'GET_PROPS': {
+      secondWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_PROPS': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'GET_RESIZED': {
+      secondWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_RESIZED': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'GET_COLOR': {
+      secondWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_COLOR': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'GET_BLURED': {
+      thirdWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_BLURED': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'GET_FILELIST': {
+      forthWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+
+    case 'SEND_FILELIST': {
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+    }
+    default:
+      break;
   }
 });

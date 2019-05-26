@@ -46,7 +46,6 @@ ipcRenderer.on('asynchronous-message', async (event, arg) => {
     case 'GET_FILELIST': {
       const { dir } = data;
       const fileList = await getDirectory(dir);
-      console.log(fileList);
       const newMessage = { fileList };
       ipcRenderer.send(
         'asynchronous-message',

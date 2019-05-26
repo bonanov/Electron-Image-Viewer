@@ -1,10 +1,12 @@
 import { combineReducers, createStore } from 'redux';
 import viewModes from './viewModes';
 import fileSystem from './fileSystem';
+import popups from './popups';
 
 const reducer = combineReducers({
   viewModes,
   fileSystem,
+  popups,
 });
 
 let tempStore;

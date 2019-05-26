@@ -22,7 +22,8 @@
     "redux": "^4.0.1",
     "sharp": "^0.22.1",
     "stackblur": "^1.0.0",
-    "stackblur-canvas": "^2.2.0"
+    "stackblur-canvas": "^2.2.0",
+    "trash": "^5.2.0"
   },
   "scripts": {
     "all": "run-p watch electron-dev",
@@ -30,8 +31,9 @@
     "watch-less": "less-watch-compiler src/less/ src/css-auto/ main.less",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "build-app": "npm-run-all build electron-build",
-    "bundle": "webpack src/secondWindow/utilApp.js -o src/secondWindow/bundle.js",
+    "build-app": "npm-run-all build bundle-dev bundle-move electron-build",
+    "bundle-dev": "webpack src/secondWindow/utilApp.js -o src/secondWindow/bundle.js",
+    "bundle-move": "cp src/secondWindow/ build/static/js/secondWindow/ -r",
     "electron-rebuild": "electron-rebuild",
     "flow": "flow",
     "test": "react-scripts test --env=jsdom",

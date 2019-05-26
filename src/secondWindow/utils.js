@@ -60,11 +60,9 @@ export const getFileProps = async filePath => {
 };
 
 const getFileSize = async dir => {
-  console.log(dir);
   const fileSize = await new Promise((resolve, reject) => {
     gm(dir).size(async (err, size) => {
       if (err) return resolve({ err });
-      console.log(size);
       resolve({ width: size.width, height: size.height });
     });
   });

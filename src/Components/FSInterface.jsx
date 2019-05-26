@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 
-import { toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import { clone, shuffle as _shuffle } from 'lodash';
 import * as types from '../constants/actionTypes';
@@ -11,7 +10,14 @@ import FileHandler from './FileHandler';
 // import FilesHandler from './FilesHandler';
 import GUI from './GUI';
 import * as message from '../constants/asyncMessages';
-import { getInitialFile } from '../utils/getValueFromStore';
+import {
+  getInitialFile,
+  getCurrentFile,
+  getFileSystem,
+  getFileByPath,
+  removeFileFromList,
+} from '../utils/getValueFromStore';
+import { parseArguments, mod } from '../utils/base';
 
 const { ipcRenderer } = window.electron;
 
@@ -42,25 +48,16 @@ class FSInterface extends Component {
           break;
       }
     });
-    // this.initializeArguments();
+    this.initializeArguments();
   }
 
-  // initializeArguments = async () => {
-  // const isDirectory = arg => fs.lstatSync(arg).isDirectory();
-
-  //   const dirExist = dir => fs.existsSync(dir);
-  //   const isFile = arg => fs.lstatSync(arg).isFile();
-  //   const dev = NODE_ENV === 'development';
-  //   argv.forEach(async (ar, i) => {
-  //     const existD = await dirExist(ar);
-  //     if (!existD) return;
-  //     const existF = await isFile(ar);
-  //     if (!existF) return;
-
-  //     if (dev && i > 1) return this.handleFilesOpen(ar);
-  //     if (!dev && i > 0) return this.handleFilesOpen(ar);
-  //   });
-  // };
+  initializeArguments = async () => {
+    const { argv } = remote.process;
+    if (!argv) return;
+    const fileList = await parseArguments(argv);
+    if (!fileList) return;
+    this.handleFiles(fileList);
+  };
 
   handleFiles = ({ list, dir, handleDir }) => {
     const { updateDir, updateCurrentFile, setShuffle } = this.props;
@@ -115,11 +112,13 @@ class FSInterface extends Component {
   };
 
   findPosition = (objects?) => {
-    const { fileSystem, updateFileSystem } = this.props;
-    const { fileList: list, currentFile } = fileSystem;
+    const { updateFileSystem } = this.props;
+    const list = message.getFileList();
+    const currentFile = getCurrentFile();
     const fileList = objects && objects.fileList ? objects.fileList : list;
 
     const isSamePath = f => f && f.fullPath === currentFile.fullPath;
+
     const fileObject = fileList.find(file => isSamePath(file));
     if (!fileObject) return;
     const currentPosition = fileList.indexOf(fileObject);
@@ -184,37 +183,27 @@ class FSInterface extends Component {
       updateFileList,
       updatePosition,
     } = this.props;
-    const { fileList, currentPosition: i } = fileSystem;
-    const { shuffle } = viewModes;
-    const fileExists = fs.existsSync(path);
-    if (!fileExists) {
-      let newList = [];
-      if (shuffle) {
-        this.fileList = this.fileList.filter(file => file.fullPath !== path);
-        newList = this.fileList;
-      }
+    const isExist = fs.existsSync(path);
+    if (isExist) return;
 
-      if (!shuffle) {
-        newList = fileList.filter(file => file.fullPath !== path);
-      }
-      await updateFileList(clone(newList));
-      // this.setPosition();
-      if (i > fileList.length || i < 0) return updatePosition(0);
-      updatePosition(i - 1);
-    }
+    const { currentPosition } = getFileSystem();
+    const currentFile = getFileByPath(path);
+    const newList = removeFileFromList(currentFile.fullPath);
+    updateFileList(newList);
+    updatePosition(mod(currentPosition, newList.length));
   };
 
   render() {
     const { fileSystem } = this.props;
-    const { currentFile } = fileSystem;
+    const currentFile = getCurrentFile();
     return (
       <React.Fragment>
-        <DropArea onDrop={this.handleFiles} />
+        <DropArea currentFile={currentFile} onDrop={this.handleFiles} />
         <FileHandler
           onRef={ref => (this.imageEl = ref)}
           onFileError={this.handleFileError}
           // imageEl={this.imageEl}
-          currentFile={currentFile}
+          // currentFile={currentFile}
         />
 
         <GUI

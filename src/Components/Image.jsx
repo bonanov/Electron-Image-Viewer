@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
 import * as types from '../constants/actionTypes.js';
@@ -13,7 +12,7 @@ class ImageContainer extends Component {
   imageEl = null;
 
   getStyle = () => {
-    const { scale, zoomMode, imagePosition } = getViewModes();
+    const { scale, imagePosition } = getViewModes();
     const { fileProps } = getCurrentFile();
     if (!fileProps) return;
     const { width } = fileProps;
@@ -40,16 +39,14 @@ class ImageContainer extends Component {
   };
 
   render() {
-    const { fileSystem, base64, base64Bg, onRef } = this.props;
-    const { zoomMode, scale } = getViewModes();
     // const { fullPath, base64 } = fileSystem.currentFile;
-
+    const { fileSystem, viewModes } = this.props;
+    const { currentBlob } = fileSystem;
     const currentFile = getCurrentFile();
     if (!currentFile) return null;
     const { fullPath, type, blurBlob } = currentFile;
-    const { currentBlob } = getFileSystem();
 
-    const zoomFit = zoomMode === 1;
+    const { scale } = viewModes;
     const noScale = scale <= 1;
     const style = this.getStyle();
     if (blurBlob) this.blob = blurBlob;

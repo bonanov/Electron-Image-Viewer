@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { toast } from 'react-toastify';
 import { throttle, clone } from 'lodash';
 import FastAverageColor from 'fast-average-color';
 import ImageContainer from './Image';
-import { handleResizeImage, getFileProps } from '../utils/imageProcessing';
 import * as types from '../constants/actionTypes';
 import * as message from '../constants/asyncMessages';
-import { formatFullPath, formatPath, getBlobFromBase64 } from '../utils/base';
+import { formatPath, getBlobFromBase64 } from '../utils/base';
 import {
   getCurrentFilePath,
   getCurrentFile,
@@ -37,7 +35,7 @@ class FileHandler extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('resize', this.onResize);
+    // window.addEventListener('resize', this.onResize);
 
     ipcRenderer.on('asynchronous-message', (event, arg) => {
       const { type, data } = arg;
@@ -79,10 +77,10 @@ class FileHandler extends Component {
     const currentFile = getInitialFile();
     const { type } = currentFile;
     this.handleProps();
-    // this.handleBlur();
-    // updateCurrentBlob('');
+    this.handleBlur();
+    updateCurrentBlob('');
     this.handleScale();
-    // if (type !== 'gif') this.handleResize();
+    if (type !== 'gif') this.handleResize();
   };
 
   handleScale = () => {
@@ -91,6 +89,7 @@ class FileHandler extends Component {
     const { updateScale } = this.props;
     if (!fileProps) return;
     if (zoomMode !== 2) return;
+    if (this.imageEl) return;
     const image = this.imageEl.querySelector('.image-inner');
     const elementWidth = image.offsetWidth;
     const scale = fileProps.width / elementWidth;
@@ -116,6 +115,7 @@ class FileHandler extends Component {
   };
 
   handleBlur = () => {
+    return;
     const { fullPath, blurBlob } = getCurrentFile();
     if (!fullPath) return;
 
@@ -194,13 +194,11 @@ class FileHandler extends Component {
   };
 
   handleResize = () => {
-    return;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
 
     const { innerHeight, innerWidth } = window;
-    const image = this.imageEl.querySelector('.image');
-    const { height, width } = image.getBoundingClientRect();
+    // const image = this.imageEl.querySelector('.image');
     const newMessage = {
       fullPath,
       width: innerWidth,
@@ -212,14 +210,14 @@ class FileHandler extends Component {
 
   setResized = async ({ base64, fullPath: path }) => {
     const { updateCurrentBlob } = this.props;
-    // const { fileList } = getFileSystem();
-    // const position = getFilePositionByPath(path);
-    // const clonedList = clone(fileList);
-    // clonedList[position].resizedBlob = base64;
-    // console.log(base64);
+    const blob = await getBlobFromBase64(base64);
+
+    // We have to keep reference to our blob and cleaning
+    // to prevent memory from leaking
+    URL.revokeObjectURL(this.blob);
+    this.blob = blob;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
-    const blob = await getBlobFromBase64(base64);
     if (path !== fullPath) return;
     // this.setState({ base64 });
     updateCurrentBlob(blob);
@@ -233,9 +231,7 @@ class FileHandler extends Component {
   };
 
   render() {
-    const { onRef } = this.props;
     const { base64, base64Bg } = this.state;
-    const { currentFile } = this.props.fileSystem;
     return (
       <ImageContainer
         base64Bg={base64Bg}

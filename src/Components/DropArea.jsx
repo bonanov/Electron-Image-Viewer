@@ -94,7 +94,17 @@ class DropArea extends Component {
     onDrop(fileList);
   };
 
-  isSupportedType = type => !!FILE_TYPES.includes(type);
+  // file object
+  // fileObject = {
+  //   id,
+  //   fileName: file.name,
+  //   fullPath: file.path,
+  //   dir,
+  //   type,
+  //   size: file.size,
+  //   lastModified: file.lastModified,
+  //   isUrl: false,
+  // };
 
   formatFileObject = file => {
     const id = Math.floor(Math.random() * Date.now());
@@ -135,18 +145,19 @@ class DropArea extends Component {
     return fileObject;
   };
 
-  // onTextDrop = text => {
-  //   const { onLinkDrop } = this.props;
-  //   const isSupportedType = text.match(SUPPORTED_EXTENSIONS);
-  //   const type = isSupportedType[0];
-  //   if (type) {
-  //     onLinkDrop(text);
-  //     return;
-  //     this.handleTextDrop(type);
-  //   }
-  // };
+  onTextDrop = text => {
+    console.log(text);
+    // const { onLinkDrop } = this.props;
+    // const isSupportedType = text.match(SUPPORTED_EXTENSIONS);
+    // const type = isSupportedType[0];
+    // if (type) {
+    //   onLinkDrop(text);
+    //   return;
+    // this.handleTextDrop(type);
+    // }
+  };
 
-  // handleTextDrop = type => {};
+  handleTextDrop = type => {};
 
   handleDirectoryDrop = item => {
     const dirReader = item.createReader();
@@ -163,11 +174,13 @@ class DropArea extends Component {
   };
 
   render() {
+    const { currentFile } = this.props;
     const { highlight } = this.state;
+
     const classes = highlight ? 'drop-area drop-area_highlighted' : 'drop-area';
     return (
       <div className={classes}>
-        <h1 className="drop-area_title">Drop Files</h1>
+        {!currentFile && <h1 className="drop-area_title">Drop Files</h1>}
       </div>
     );
   }

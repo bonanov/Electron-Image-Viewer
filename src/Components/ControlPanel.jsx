@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 
 class ControlPanel extends Component {
-  state = {};
+  state = {
+    trashTooltip: false,
+  };
 
   getZoomIcon = () => {
     const { zoomMode, onZoomChange } = this.props;
@@ -28,6 +30,43 @@ class ControlPanel extends Component {
     );
   };
 
+  tooltipOn = () => this.setState({ trashTooltip: true });
+
+  tooltipOff = () => this.setState({ trashTooltip: false });
+
+  onDeleteClick = () => {
+    const { trashTooltip } = this.state;
+    const { onFileDelete } = this.props;
+    if (!trashTooltip) return;
+    onFileDelete();
+    this.tooltipOff();
+  };
+
+  getTrashIcon = () => {
+    const { trashTooltip } = this.state;
+    const classes = `control trash`;
+    return (
+      <span
+        onMouseLeave={this.tooltipOff}
+        onMouseEnter={this.tooltipOn}
+        title="Delete"
+        className={classes}
+      >
+        <div className="trash-tooltip_container" hidden={!trashTooltip}>
+          <div
+            onClick={this.onDeleteClick}
+            className={`trash-tooltip ${
+              trashTooltip ? 'trash-visible' : 'trash-hidden'
+            }`}
+          >
+            Delete
+          </div>
+        </div>
+        <i className="fa fa-trash" />
+      </span>
+    );
+  };
+
   render() {
     const { onShiftImage } = this.props;
     const { hidden } = this.props;
@@ -37,6 +76,7 @@ class ControlPanel extends Component {
         className={`control-panel-container control-panel-bottom ${hiddenClasses}`}
       >
         <div className="controls">
+          {this.getTrashIcon()}
           {this.getRandomIcon()}
           {this.getZoomIcon()}
           <span
