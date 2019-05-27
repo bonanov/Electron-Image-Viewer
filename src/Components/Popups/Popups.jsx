@@ -3,22 +3,16 @@ import { connect } from 'react-redux';
 import * as types from '../../constants/actionTypes';
 import { getPopups, undoFileRemoving } from '../../utils/getValueFromStore';
 import UndoRemove from './UndoRemove';
+import Animate from '../Animate';
 
 class Popups extends Component {
-  handleUndoClick = async () => {
-    const { togglePopup, updateFileList } = this.props;
-
-    togglePopup('undoRemove');
-    const fileList = await undoFileRemoving();
-    updateFileList(fileList);
-  };
-
   render() {
-    const { popups } = this.props;
+    const { popups, trash } = this.props;
+    const { onUndoRemove } = this.props;
     const { undoRemove } = popups;
     return (
       <aside className="popups-container">
-        {undoRemove && <UndoRemove onClick={this.handleUndoClick} />}
+        {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
       </aside>
     );
   }
@@ -28,6 +22,7 @@ const mapStateToProps = state => ({
   viewModes: state.viewModes,
   fileSystem: state.fileSystem,
   popups: state.popups,
+  trash: state.trash.list,
 });
 
 const mapDispatchToProps = {

@@ -60,7 +60,8 @@ class FSInterface extends Component {
   };
 
   handleFiles = ({ list, dir, handleDir }) => {
-    const { updateDir, updateCurrentFile, setShuffle } = this.props;
+    const { updateDir, updateCurrentFile, setShuffle, clearTrash } = this.props;
+    clearTrash();
 
     updateDir(dir);
     updateCurrentFile(list[0]);
@@ -188,9 +189,7 @@ class FSInterface extends Component {
 
     const { currentPosition } = getFileSystem();
     const currentFile = getFileByPath(path);
-    const newList = removeFileFromList(currentFile.fullPath);
-    updateFileList(newList);
-    updatePosition(mod(currentPosition, newList.length));
+    removeFileFromList(currentFile.fullPath);
   };
 
   render() {
@@ -224,6 +223,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
+  clearTrash: () => ({ type: types.CLEAR_TRASH }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
   setShuffle: () => ({ type: types.SET_SHUFFLE }),
   updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),

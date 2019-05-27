@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import * as types from '../constants/actionTypes.js';
 import PositionPanel from './PositionPanel';
 import ControlPanel from './ControlPanel';
 import ImagePreloader from './ImagePreloader';
-import Popups from './Popups/base';
+import Popups from './Popups/Popups';
 import * as message from '../constants/asyncMessages';
 import {
   HIDE_TIMEOUT,
@@ -18,8 +18,9 @@ import {
   getViewModes,
   getCurrentFilePath,
   removeFileFromList,
-  getFileAtNPosition,
   getFileSystem,
+  undoFileRemoving,
+  getTrash,
 } from '../utils/getValueFromStore.js';
 
 const { ipcRenderer } = window.electron;
@@ -71,7 +72,7 @@ class GUI extends Component {
   handleKey = e => {
     const { updatePosition } = this.props;
     const { fileSystem } = this.props;
-    const { code } = e;
+    const { code, ctrlKey } = e;
 
     let order = 0;
     if (code === 'ArrowRight') order = 1;
@@ -82,6 +83,54 @@ class GUI extends Component {
     if (code === 'Home') return updatePosition(0);
     if (code === 'End') return updatePosition(lastPosition);
     if (code === 'KeyF') return toggleFullscreen();
+    if (code === 'Delete') return this.handleFileDelete();
+    if (ctrlKey && code === 'KeyZ') return this.handleUndoRemoveLast();
+  };
+
+  handleUndoRemoveLast = () => {
+    const list = getTrash();
+
+    if (list.length < 1) return;
+    const i = list.length - 1;
+    const { fullPath } = list[i].file;
+    this.handleUndoRemove(fullPath);
+  };
+
+  handleUndoRemove = async fullPath => {
+    const { removeFromTrash } = this.props;
+
+    const err = await undoFileRemoving(fullPath);
+    if (err) return;
+    removeFromTrash(fullPath);
+  };
+
+  handleFileDelete = async () => {
+    const { addToTrash, addPopup, removePopup, setTrashSeen } = this.props;
+
+    const { currentPosition } = getFileSystem();
+    const currentFile = getCurrentFile();
+    if (!currentFile) return;
+
+    removeFileFromList(currentFile.fullPath);
+    const trashed = await trash([currentFile.fullPath]);
+
+    if (!trashed)
+      return toast.error('something went wrong while deleting a file');
+
+    const trashedFile = {
+      file: currentFile,
+      trashPath: trashed[0].path,
+      position: currentPosition,
+    };
+
+    addToTrash(trashedFile);
+
+    addPopup('undoRemove');
+    // clearTimeout(this.undoRemoveTime);
+    this.undoRemoveTime = setTimeout(() => {
+      // removePopup('undoRemove');
+      setTrashSeen(currentFile.fullPath);
+    }, 5000);
   };
 
   handleMouseLeave = () => {
@@ -279,8 +328,6 @@ class GUI extends Component {
     const isExist = fs.existsSync(newFile.fullPath);
     if (!isExist) {
       const newList = removeFileFromList(newFile.fullPath);
-      updateFileList(newList);
-      updatePosition(mod(newPosition, newList.length));
     } else {
       updatePosition(newPosition);
     }
@@ -295,36 +342,6 @@ class GUI extends Component {
     this.timer = setTimeout(() => {
       this.updating = false;
     }, 50);
-  };
-
-  handleFileDelete = async () => {
-    const {
-      updateFileList,
-      updatePosition,
-      updateTrash,
-      addPopup,
-      removePopup,
-    } = this.props;
-    const { currentPosition } = getFileSystem();
-    const currentFile = getCurrentFile();
-    if (!currentFile) return;
-    const fileList = removeFileFromList(currentFile.fullPath);
-
-    updateFileList(fileList);
-    updatePosition(mod(currentPosition, fileList.length));
-
-    const trashed = await trash([currentFile.fullPath]);
-
-    const trashFile = {
-      trashPath: trashed[0].path,
-      initialPath: currentFile.fullPath,
-    };
-    updateTrash(trashFile);
-    addPopup('undoRemove');
-    clearTimeout(this.undoRemoveTime);
-    this.undoRemoveTime = setTimeout(() => {
-      removePopup('undoRemove');
-    }, 3000);
   };
 
   mainGui = () => {
@@ -370,7 +387,7 @@ class GUI extends Component {
     return (
       <React.Fragment>
         <ToastContainer />
-        <Popups />
+        <Popups onUndoRemove={this.handleUndoRemove} />
         {this.mainGui()}
         {this.preloader()}
       </React.Fragment>
@@ -392,7 +409,9 @@ const mapDispatchToProps = {
   setZoomFree: () => ({ type: types.ZOOM_FREE }),
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),
-  updateTrash: payload => ({ type: types.UPDATE_TRASH, payload }),
+  addToTrash: payload => ({ type: types.ADD_TO_TRASH, payload }),
+  setTrashSeen: payload => ({ type: types.SET_TRASH_SEEN, payload }),
+  removeFromTrash: payload => ({ type: types.REMOVE_FROM_TRASH, payload }),
   updateImagePosition: payload => ({
     type: types.UPDATE_IMAGE_POSITION,
     payload,

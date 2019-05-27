@@ -7,14 +7,15 @@ class ImagePreloader extends Component {
 
   render() {
     const { fileList, bgColor } = this.props;
-    if (!fileList.length) return null;
+    if (fileList.length < 1) return null;
 
-    const preloadFileList = getClosestNFiles(PRELOAD_N_IMAGES);
+    const preloadList = getClosestNFiles(PRELOAD_N_IMAGES);
+    if (preloadList.length < 1) return null;
 
     return (
       <React.Fragment>
         <div className="preload-image_container">
-          {preloadFileList.map((file, index) => (
+          {preloadList.map((file, index) => (
             <img
               key={index}
               alt=""

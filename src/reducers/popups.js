@@ -1,26 +1,23 @@
 import * as types from '../constants/actionTypes';
 
 const initialState = {
-  undoRemove: false,
+  undoRemove: true,
 };
 
 const popups = (state = initialState, action) => {
-  if (action.type === types.TOGGLE_POPUP) {
-    const name = action.payload;
-    return { ...state, [name]: !state[name] };
-  }
+  switch (action.type) {
+    case types.TOGGLE_POPUP:
+      return { ...state, [action.payload]: !state[action.payload] };
 
-  if (action.type === types.REMOVE_POPUP) {
-    const name = action.payload;
-    return { ...state, [name]: false };
-  }
+    case types.REMOVE_POPUP:
+      return { ...state, [action.payload]: false };
 
-  if (action.type === types.ADD_POPUP) {
-    const name = action.payload;
-    return { ...state, [name]: true };
-  }
+    case types.ADD_POPUP:
+      return { ...state, [action.payload]: true };
 
-  return state;
+    default:
+      return state;
+  }
 };
 
 export default popups;

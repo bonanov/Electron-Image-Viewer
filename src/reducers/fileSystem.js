@@ -9,14 +9,9 @@ const initialState = {
   dir: '',
   blurBlob: '',
   currentBlob: '',
-  trash: {},
 };
 
 const fileSystem = (state = initialState, action) => {
-  if (action.type === types.UPDATE_TRASH) {
-    return { ...state, trash: action.payload };
-  }
-
   if (action.type === types.UPDATE_FILESYSTEM) {
     return { ...state, ...action.payload };
   }

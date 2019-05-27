@@ -2,11 +2,13 @@ import { combineReducers, createStore } from 'redux';
 import viewModes from './viewModes';
 import fileSystem from './fileSystem';
 import popups from './popups';
+import trash from './trash';
 
 const reducer = combineReducers({
   viewModes,
   fileSystem,
   popups,
+  trash,
 });
 
 let tempStore;

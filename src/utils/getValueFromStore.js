@@ -1,15 +1,18 @@
 import { clone } from 'lodash';
-import { store as _store } from '../reducers';
+import { store } from '../reducers';
 import { mod } from './base';
+import * as types from '../constants/actionTypes';
 
 const { remote } = window.electron;
 const fs = remote.require('fs');
 
-export const getStore = () => _store.getState(_store);
+export const getStore = () => store.getState();
+const dispatch = action => store.dispatch(action);
 
 export const getFileSystem = () => getStore().fileSystem;
 export const getViewModes = () => getStore().viewModes;
 export const getPopups = () => getStore().popups;
+export const getTrash = () => getStore().trash.list;
 
 export const getInitialFile = () => getFileSystem().currentFile;
 
@@ -52,37 +55,55 @@ export const getFilePositionByPath = path => {
   return fileList.indexOf(findedFile);
 };
 
-let removedFile;
-
-// TODO: dumb naming
 export const removeFileFromList = fullPath => {
-  const { fileList } = getFileSystem();
-  if (!fileList) return;
-  const fileListCloned = clone(fileList);
+  const { fileList: fileList_, currentPosition } = getFileSystem();
+  if (!fileList_) return;
+  const fileList = clone(fileList_);
 
-  const fileToRemove = fileListCloned.find(file => file.fullPath === fullPath);
-  const index = fileListCloned.indexOf(fileToRemove);
-  removedFile = { file: fileToRemove, position: index };
+  // const file = fileList.find(f => f.fullPath === fullPath);
+  // if (!file) return;
+  // const position = fileList.indexOf(file);
+  // const removedFile = { file, position };
 
-  return fileListCloned.filter(file => file.fullPath !== fullPath);
+  const newList = fileList.filter(f => f.fullPath !== fullPath);
+  const newPosition = mod(currentPosition, newList.length) || 0;
+
+  dispatch({ type: types.UPDATE_FILELIST, payload: newList });
+  dispatch({ type: types.UPDATE_CURRENT_POSITION, payload: newPosition });
 };
 
-export const undoFileRemoving = async () => {
-  const { trash } = getFileSystem();
-  const fileList = new Promise((resolve, reject) => {
-    fs.rename(trash.trashPath, trash.initialPath, async err => {
-      if (err) reject(err);
-      const list = await addFileToList(removedFile);
-      resolve(list);
+export const undoFileRemoving = async initialPath => {
+  const trash = getTrash();
+
+  const isExactPath = trashed => trashed.file.fullPath === initialPath;
+  const trashedFile = trash.find(trashed => isExactPath(trashed));
+
+  if (!trashedFile) return;
+
+  const { trashPath, file, position } = trashedFile;
+
+  const undone = new Promise((resolve, reject) => {
+    fs.rename(trashPath, initialPath, async err => {
+      if (err) return resolve(err);
+      addFileToList({ file, position });
+      resolve();
+      // resolve(list);
     });
   });
-  return fileList;
+  return undone;
 };
 
-export const addFileToList = ({ file, position }) => {
-  const { fileList } = getFileSystem();
-  if (!fileList) return;
-  const fileListCloned = clone(fileList);
-  fileListCloned.splice(position, 0, file);
-  return fileListCloned;
+export const addFileToList = ({ file, position: position_ }) => {
+  const { fileList: fileList_ } = getFileSystem();
+  if (!fileList_) return;
+
+  let position = position_;
+
+  const fileList = clone(fileList_);
+  if (fileList.length === 0) position = 0;
+  fileList.splice(position, 0, file);
+  dispatch({ type: types.UPDATE_FILELIST, payload: fileList });
+  dispatch({ type: types.UPDATE_CURRENT_POSITION, payload: position });
+
+  return true;
 };

@@ -31,11 +31,10 @@ class FileHandler extends Component {
       base64Bg: '',
     };
     this.imageEl = null;
-    this.onResize = throttle(this.handleResize, 500);
   }
 
   componentDidMount() {
-    // window.addEventListener('resize', this.onResize);
+    window.addEventListener('resize', throttle(this.handleResize, 200));
 
     ipcRenderer.on('asynchronous-message', (event, arg) => {
       const { type, data } = arg;
