@@ -12,6 +12,10 @@ const initialState = {
 };
 
 const fileSystem = (state = initialState, action) => {
+  if (action.type === types.RESET_FILESYSTEM) {
+    return { ...initialState };
+  }
+
   if (action.type === types.UPDATE_FILESYSTEM) {
     return { ...state, ...action.payload };
   }

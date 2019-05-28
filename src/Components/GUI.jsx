@@ -7,11 +7,7 @@ import ControlPanel from './ControlPanel';
 import ImagePreloader from './ImagePreloader';
 import Popups from './Popups/Popups';
 import * as message from '../constants/asyncMessages';
-import {
-  HIDE_TIMEOUT,
-  CONTROL_PANEL_SEL,
-  IMAGE_CONTAINER_SEL,
-} from '../constants/base';
+import { HIDE_TIMEOUT, CONTROL_PANEL_SEL, IMAGE_CONTAINER_SEL } from '../constants/base';
 import { toggleFullscreen, mod } from '../utils/base.js';
 import {
   getCurrentFile,
@@ -51,6 +47,7 @@ class GUI extends Component {
   componentDidMount() {
     const { hideUi } = this.props;
     document.addEventListener('keydown', this.handleKey);
+    document.addEventListener('keyup', this.handleKeyUp);
     document.addEventListener('mousedown', this.handleMouseDown);
     document.addEventListener('mousemove', this.handleMouseMove);
     document.addEventListener('mouseup', this.handleMouseUp);
@@ -61,6 +58,7 @@ class GUI extends Component {
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKey);
+    document.removeEventListener('keyup', this.handleKeyUp);
     window.removeEventListener('resize', this.resizeImage_);
     document.removeEventListener('wheel', this.handleWheel);
     document.removeEventListener('mousedown', this.handleMouseDown);
@@ -69,22 +67,35 @@ class GUI extends Component {
     document.removeEventListener('mouseleave', this.handleMouseLeave);
   }
 
-  handleKey = e => {
-    const { updatePosition } = this.props;
-    const { fileSystem } = this.props;
-    const { code, ctrlKey } = e;
-
-    let order = 0;
-    if (code === 'ArrowRight') order = 1;
-    if (code === 'ArrowLeft') order = -1;
-    if (order) return this.handleShiftImage(order);
-
-    const lastPosition = fileSystem.fileList.length - 1;
-    if (code === 'Home') return updatePosition(0);
-    if (code === 'End') return updatePosition(lastPosition);
-    if (code === 'KeyF') return toggleFullscreen();
+  handleKeyUp = e => {
+    const { code, ctrlKey, key } = e;
     if (code === 'Delete') return this.handleFileDelete();
     if (ctrlKey && code === 'KeyZ') return this.handleUndoRemoveLast();
+  };
+
+  handleKey = e => {
+    const { updatePosition, onShuffle } = this.props;
+    const { fileList } = getFileSystem();
+    const { code, ctrlKey, key } = e;
+
+    if (code === 'ArrowRight' || code === 'Space') return this.handleShiftImage(1);
+    if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
+
+    if (code === 'Home') return updatePosition(0);
+    if (key === '+') return this.handleZoom({ delta: +1 });
+    if (key === '-') return this.handleZoom({ delta: -1 });
+    if (code === 'End') return updatePosition(fileList.length - 1);
+    if (code === 'KeyF') return toggleFullscreen();
+    if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
+    if (key === 'F11') {
+      e.preventDefault();
+      toggleFullscreen();
+      return;
+    }
+    if (code === 'KeyS') {
+      this.handlePanelsHide();
+      onShuffle();
+    }
   };
 
   handleUndoRemoveLast = () => {
@@ -114,8 +125,7 @@ class GUI extends Component {
     removeFileFromList(currentFile.fullPath);
     const trashed = await trash([currentFile.fullPath]);
 
-    if (!trashed)
-      return toast.error('something went wrong while deleting a file');
+    if (!trashed) return toast.error('something went wrong while deleting a file');
 
     const trashedFile = {
       file: currentFile,
@@ -202,7 +212,7 @@ class GUI extends Component {
       showUi();
     }
 
-    if (target.closest(CONTROL_PANEL_SEL)) return;
+    if (target && target.closest(CONTROL_PANEL_SEL)) return;
     this.hideTimer = setTimeout(hideUi, HIDE_TIMEOUT);
   };
 
@@ -269,7 +279,10 @@ class GUI extends Component {
   };
 
   handleZoomToggle = () => {
-    const { fileProps } = getCurrentFile();
+    const currentFile = getCurrentFile();
+    if (!currentFile) return;
+
+    const { fileProps } = currentFile;
 
     const { resetImagePosition, setZoomMode, updateScale } = this.props;
     const { viewModes, imageEl } = this.props;
@@ -358,6 +371,7 @@ class GUI extends Component {
           currentPosition={currentPosition}
         />
         <ControlPanel
+          onToggleFullscreen={() => toggleFullscreen()}
           onFileDelete={this.handleFileDelete}
           onShiftImage={this.handleShiftImage}
           onZoomChange={this.handleZoomToggle}

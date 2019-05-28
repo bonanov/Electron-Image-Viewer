@@ -53,6 +53,12 @@ body {
   transition-timing-function: cubic-bezier(0, 0, 0, 1);
   margin: auto;
   /* will-change: transform; */
+  /* background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  width: 100%;
+  height: 100%; */
+  /* transition: 0.1s background-image; */
 }
 
 .image-moving .image {
@@ -89,6 +95,7 @@ body {
   width: auto;
   max-height: 100vh;
   max-width: 100vw;
+  /* display: none; */
 }
 
 .control {
@@ -101,7 +108,7 @@ body {
 }
 
 .control-panel-container {
-  will-change: bottom, top, opacity;
+  will-change: transform, opacity;
   color: #404040;
   background: rgba(229, 229, 229, 0.7);
   border-radius: 5px;
@@ -140,11 +147,11 @@ body {
 }
 
 .control-panel-upper.panel-hidden {
-  top: -20px;
+  transform: translateY(-50px);
 }
 
 .control-panel-bottom.panel-hidden {
-  bottom: -20px;
+  transform: translateY(50px);
 }
 
 .control-panel-container .controls {
@@ -153,7 +160,7 @@ body {
 }
 
 
-.control-panel-container .control {
+.control {
   font-size: 22px;
   margin: auto 8px;
 }
@@ -175,8 +182,8 @@ body {
 }
 
 .control-panel-container .trash {
-  font-size: 24px;
-  vertical-align: 1px;
+  font-size: 26px;
+  vertical-align: 0px;
   position: relative;
 }
 
@@ -226,7 +233,13 @@ body {
   bottom: 50px;
 }
 
-.random-enabled {
+.slideshow-mode, .fullscreen-mode {
+  font-size: 23px;
+  vertical-align: 1px;
+}
+
+
+.random-enabled, .slideshow-enabled {
   color: #3978B2;
 }
 

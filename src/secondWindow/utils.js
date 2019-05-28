@@ -14,7 +14,7 @@ export const getAverageColor = async buffer => {
 };
 
 export const blurImage = async ({ fullPath, width, height }) => {
-  const pngBase64Prefix = 'data:image/png;base64,';
+  const base64Prefix = 'data:image/jpeg;base64,';
   const base64 = await new Promise((resolve, reject) => {
     sharp(fullPath)
       .resize(Math.round(width), height, {
@@ -24,8 +24,12 @@ export const blurImage = async ({ fullPath, width, height }) => {
       })
       .blur(15)
       .png({ compressionLevel: 0 })
+      // .jpeg({
+      //   quality: 100,
+      //   chromaSubsampling: '4:4:4',
+      // })
       .toBuffer()
-      .then(data => resolve(pngBase64Prefix + data.toString('base64')))
+      .then(data => resolve(base64Prefix + data.toString('base64')))
       // eslint-disable-next-line prefer-promise-reject-errors
       .catch(err => reject(err));
   });

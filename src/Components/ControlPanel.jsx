@@ -30,6 +30,28 @@ class ControlPanel extends Component {
     );
   };
 
+  getFullScreenIcon = () => {
+    const { onToggleFullscreen } = this.props;
+    const classes = `control fullscreen-mode`;
+    return (
+      <span title="Fullscreen" onClick={onToggleFullscreen} className={classes}>
+        <i className="fa fa-window-maximize" />
+      </span>
+    );
+  };
+
+  getSlideShowIcon = () => {
+    const { slideShow, onToggleSlideShow } = this.props;
+    const classes = `control slideshow-mode ${
+      slideShow ? 'slideshow-enabled' : ''
+    }`;
+    return (
+      <span title="Slideshow" onClick={onToggleSlideShow} className={classes}>
+        <i className="fa fa-film" />
+      </span>
+    );
+  };
+
   tooltipOn = () => this.setState({ trashTooltip: true });
 
   tooltipOff = () => this.setState({ trashTooltip: false });
@@ -77,6 +99,7 @@ class ControlPanel extends Component {
       >
         <div className="controls">
           {this.getTrashIcon()}
+          {this.getSlideShowIcon()}
           {this.getRandomIcon()}
           {this.getZoomIcon()}
           <span
@@ -93,6 +116,7 @@ class ControlPanel extends Component {
           >
             <i className="fa fa-chevron-right" />
           </span>
+          {this.getFullScreenIcon()}
         </div>
       </div>
     );

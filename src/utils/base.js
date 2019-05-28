@@ -65,8 +65,7 @@ export function toggleFullscreen(event) {
     element = event;
   }
 
-  const isFullscreen =
-    document.webkitIsFullScreen || document.mozFullScreen || false;
+  const isFullscreen = document.webkitIsFullScreen || document.mozFullScreen || false;
 
   element.requestFullScreen =
     element.requestFullScreen ||

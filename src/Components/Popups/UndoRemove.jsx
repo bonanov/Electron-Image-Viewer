@@ -1,8 +1,9 @@
 import React from 'react';
 import Animate from '../Animate';
 
-const UndoRemove = ({ onClick, trash }) =>
-  trash.length && (
+const UndoRemove = ({ onClick, trash }) => {
+  if (!trash.length) return null;
+  return (
     <div className="popup undo-remove_container">
       {trash.map((trashObject, i) => {
         const { seen, file } = trashObject;
@@ -29,5 +30,6 @@ const UndoRemove = ({ onClick, trash }) =>
       })}
     </div>
   );
+};
 
 export default UndoRemove;

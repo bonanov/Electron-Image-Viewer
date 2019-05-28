@@ -44,6 +44,11 @@ class FSInterface extends Component {
           break;
         }
 
+        case 'SEND_ARGUMENTS': {
+          this.initializeArguments(data);
+          break;
+        }
+
         default:
           break;
       }
@@ -51,10 +56,13 @@ class FSInterface extends Component {
     this.initializeArguments();
   }
 
-  initializeArguments = async () => {
+  initializeArguments = async (args?) => {
+    const { resetFileSystem } = this.props;
+    resetFileSystem();
     const { argv } = remote.process;
-    if (!argv) return;
-    const fileList = await parseArguments(argv);
+    if (!argv && !args) return;
+
+    const fileList = await parseArguments(args || argv);
     if (!fileList) return;
     this.handleFiles(fileList);
   };
@@ -224,6 +232,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   clearTrash: () => ({ type: types.CLEAR_TRASH }),
+  resetFileSystem: () => ({ type: types.RESET_FILESYSTEM }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
   setShuffle: () => ({ type: types.SET_SHUFFLE }),
   updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),

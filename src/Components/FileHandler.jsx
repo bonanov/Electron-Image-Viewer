@@ -31,10 +31,12 @@ class FileHandler extends Component {
       base64Bg: '',
     };
     this.imageEl = null;
+    this.resizeTimer = null;
   }
 
   componentDidMount() {
-    window.addEventListener('resize', throttle(this.handleResize, 200));
+    window.addEventListener('resize', throttle(this.handleResize, 500));
+    document.addEventListener('webkitfullscreenchange', this.handleResize);
 
     ipcRenderer.on('asynchronous-message', (event, arg) => {
       const { type, data } = arg;
@@ -60,12 +62,17 @@ class FileHandler extends Component {
     });
   }
 
+  onResize = e => {
+    clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(this.handleResize, 100);
+  };
+
   async componentDidUpdate(prevProps) {
     const { fileList, currentPosition } = getFileSystem();
     const currentFile = fileList[currentPosition];
     const newPosition = prevProps.fileSystem.currentPosition;
     const prevFile = prevProps.fileSystem.fileList[newPosition];
-    if (!currentFile) return;
+    if (!currentFile) return (document.title = 'Bonana Image Viewer');
     if (!prevFile || prevFile.fullPath !== currentFile.fullPath) {
       this.handleFileChange();
     }
@@ -73,12 +80,15 @@ class FileHandler extends Component {
 
   handleFileChange = async () => {
     const { updateCurrentBlob } = this.props;
-    const currentFile = getInitialFile();
+    const currentFile = getCurrentFile();
+    const { fileName } = currentFile;
+    document.title = fileName;
     const { type } = currentFile;
     this.handleProps();
-    this.handleBlur();
+    // this.handleBlur();
     updateCurrentBlob('');
     this.handleScale();
+    // this.handleColor();
     if (type !== 'gif') this.handleResize();
   };
 
@@ -88,7 +98,7 @@ class FileHandler extends Component {
     const { updateScale } = this.props;
     if (!fileProps) return;
     if (zoomMode !== 2) return;
-    if (this.imageEl) return;
+    if (!this.imageEl) return;
     const image = this.imageEl.querySelector('.image-inner');
     const elementWidth = image.offsetWidth;
     const scale = fileProps.width / elementWidth;
@@ -114,7 +124,7 @@ class FileHandler extends Component {
   };
 
   handleBlur = () => {
-    return;
+    // return;
     const { fullPath, blurBlob } = getCurrentFile();
     if (!fullPath) return;
 
@@ -211,9 +221,9 @@ class FileHandler extends Component {
     const { updateCurrentBlob } = this.props;
     const blob = await getBlobFromBase64(base64);
 
-    // We have to keep reference to our blob and cleaning
-    // to prevent memory from leaking
-    URL.revokeObjectURL(this.blob);
+    // We have to keep a reference to our blob and cleaning it
+    // to prevent from a memory leak
+    // URL.revokeObjectURL(this.blob);
     this.blob = blob;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
@@ -231,13 +241,7 @@ class FileHandler extends Component {
 
   render() {
     const { base64, base64Bg } = this.state;
-    return (
-      <ImageContainer
-        base64Bg={base64Bg}
-        base64={base64}
-        onRef={this.handleRef}
-      />
-    );
+    return <ImageContainer base64Bg={base64Bg} base64={base64} onRef={this.handleRef} />;
   }
 }
 

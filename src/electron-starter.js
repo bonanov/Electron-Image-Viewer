@@ -7,6 +7,12 @@ const { webPreferences } = require('./electron.utils');
 
 const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
 
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+}
+
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
@@ -19,6 +25,13 @@ function closeAllWindows() {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+}
+
+function closeAllOnly() {
+  mainWindow.close();
+  secondWindow.close();
+  thirdWindow.close();
+  forthWindow.close();
 }
 
 function createWindow() {
@@ -47,6 +60,13 @@ function createWindow() {
 
   mainWindow.loadURL(startUrl);
 
+  mainWindow.on('minimize', () => {
+    mainWindow.hide();
+    // secondWindow.close();
+    // thirdWindow.close();
+    // forthWindow.close();
+  });
+
   // mainWindow.on('closed', closeAllWindows);
   mainWindow.on('closed', () => (mainWindow = null));
   // mainWindow.on('closed', () => {
@@ -70,7 +90,7 @@ function createSecondWindow() {
   });
 
   secondWindow.loadURL(startUrl);
-  secondWindow.on('closed', closeAllWindows);
+  // secondWindow.on('closed', closeAllWindows);
 }
 
 function createThirdWindow() {
@@ -88,7 +108,7 @@ function createThirdWindow() {
   });
 
   thirdWindow.loadURL(startUrl);
-  thirdWindow.on('closed', closeAllWindows);
+  // thirdWindow.on('closed', closeAllWindows);
 }
 
 function createForthWindow() {
@@ -106,7 +126,7 @@ function createForthWindow() {
   });
 
   forthWindow.loadURL(startUrl);
-  forthWindow.on('closed', closeAllWindows);
+  // forthWindow.on('closed', closeAllWindows);
 }
 
 function initWindows() {
@@ -115,17 +135,19 @@ function initWindows() {
   createForthWindow();
   createWindow();
 }
-
+let tray;
 function initTray() {
-  const tray = new Tray(iconPath);
+  tray = new Tray(iconPath);
   tray.on('click', () => {
-    console.log(mainWindow);
     if (!mainWindow) {
-      createWindow();
+      // createWindow();
+      initWindows();
+      mainWindow.hide();
       return;
     }
-    const windowIsVisible = mainWindow.isVisible();
-    if (windowIsVisible) {
+
+    if (mainWindow.isVisible()) {
+      // closeAllOnly();
       mainWindow.hide();
       return;
     }
@@ -144,10 +166,23 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('active', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
+// app.on('active', () => {
+//   if (mainWindow === null) {
+//     createWindow();
+//   }
+// });
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+  if (!mainWindow) initWindows();
+
+  mainWindow.webContents.send('asynchronous-message', {
+    type: 'SEND_ARGUMENTS',
+    data: commandLine,
+  });
+
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
 });
 
 ipcMain.on('asynchronous-message', (event, arg) => {
