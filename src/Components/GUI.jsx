@@ -212,7 +212,10 @@ class GUI extends Component {
       showUi();
     }
 
-    if (target && target.closest(CONTROL_PANEL_SEL)) return;
+    const unclosableTargets = () =>
+      target.closest(CONTROL_PANEL_SEL) || target.closest('.settings_container');
+
+    if (target && unclosableTargets) return;
     this.hideTimer = setTimeout(hideUi, HIDE_TIMEOUT);
   };
 
@@ -357,6 +360,11 @@ class GUI extends Component {
     }, 50);
   };
 
+  handleSettingsOpen = () => {
+    const { togglePopup } = this.props;
+    togglePopup('settings');
+  };
+
   mainGui = () => {
     const { viewModes, fileSystem } = this.props;
     const { currentPosition, fileList } = fileSystem;
@@ -373,6 +381,7 @@ class GUI extends Component {
         <ControlPanel
           onToggleFullscreen={() => toggleFullscreen()}
           onFileDelete={this.handleFileDelete}
+          onSettingsClick={this.handleSettingsOpen}
           onShiftImage={this.handleShiftImage}
           onZoomChange={this.handleZoomToggle}
           zoomMode={viewModes.zoomMode}
@@ -385,12 +394,15 @@ class GUI extends Component {
   };
 
   preloader = () => {
-    const { viewModes, fileSystem } = this.props;
+    const { viewModes, fileSystem, config } = this.props;
+    const { backgroundColor, preloadImages } = config;
     const { bgColor } = viewModes;
     const { currentPosition, fileList } = fileSystem;
     return (
       <ImagePreloader
+        shouldPreload={preloadImages}
         bgColor={bgColor}
+        backgroundColor={backgroundColor}
         currentPosition={currentPosition}
         fileList={fileList}
       />
@@ -412,6 +424,7 @@ class GUI extends Component {
 const mapStateToProps = state => ({
   viewModes: state.viewModes,
   fileSystem: state.fileSystem,
+  config: state.config,
 });
 
 const mapDispatchToProps = {

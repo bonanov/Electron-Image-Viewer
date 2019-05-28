@@ -3,12 +3,14 @@ import viewModes from './viewModes';
 import fileSystem from './fileSystem';
 import popups from './popups';
 import trash from './trash';
+import config from './config';
 
 const reducer = combineReducers({
   viewModes,
   fileSystem,
   popups,
   trash,
+  config,
 });
 
 let tempStore;

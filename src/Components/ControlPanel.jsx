@@ -8,11 +8,7 @@ class ControlPanel extends Component {
   getZoomIcon = () => {
     const { zoomMode, onZoomChange } = this.props;
     return (
-      <span
-        title="Zoom mode"
-        onClick={onZoomChange}
-        className="control zoom-mode"
-      >
+      <span title="Zoom mode" onClick={onZoomChange} className="control zoom-mode">
         {zoomMode === 2 && <i className="fa fa-compress" />}
         {zoomMode === 1 && <i className="fa fa-expand" />}
         {zoomMode === 0 && <i className="fa fa-compress" />}
@@ -42,9 +38,7 @@ class ControlPanel extends Component {
 
   getSlideShowIcon = () => {
     const { slideShow, onToggleSlideShow } = this.props;
-    const classes = `control slideshow-mode ${
-      slideShow ? 'slideshow-enabled' : ''
-    }`;
+    const classes = `control slideshow-mode ${slideShow ? 'slideshow-enabled' : ''}`;
     return (
       <span title="Slideshow" onClick={onToggleSlideShow} className={classes}>
         <i className="fa fa-film" />
@@ -77,9 +71,7 @@ class ControlPanel extends Component {
         <div className="trash-tooltip_container" hidden={!trashTooltip}>
           <div
             onClick={this.onDeleteClick}
-            className={`trash-tooltip ${
-              trashTooltip ? 'trash-visible' : 'trash-hidden'
-            }`}
+            className={`trash-tooltip ${trashTooltip ? 'trash-visible' : 'trash-hidden'}`}
           >
             Delete
           </div>
@@ -89,14 +81,21 @@ class ControlPanel extends Component {
     );
   };
 
+  getCogIcon = () => {
+    const { onSettingsClick } = this.props;
+    return (
+      <span title="Settings" onClick={onSettingsClick} className="control settings">
+        <i className="fa fa-cog" />
+      </span>
+    );
+  };
+
   render() {
     const { onShiftImage } = this.props;
     const { hidden } = this.props;
     const hiddenClasses = hidden ? 'panel-hidden' : 'panel-visible';
     return (
-      <div
-        className={`control-panel-container control-panel-bottom ${hiddenClasses}`}
-      >
+      <div className={`control-panel-container control-panel-bottom ${hiddenClasses}`}>
         <div className="controls">
           {this.getTrashIcon()}
           {this.getSlideShowIcon()}
@@ -116,6 +115,7 @@ class ControlPanel extends Component {
           >
             <i className="fa fa-chevron-right" />
           </span>
+          {this.getCogIcon()}
           {this.getFullScreenIcon()}
         </div>
       </div>

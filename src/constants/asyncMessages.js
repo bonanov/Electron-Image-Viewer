@@ -78,3 +78,15 @@ export const getFileList = dir => ({
     dir,
   },
 });
+
+export const getConfigs = () => ({
+  type: 'GET_CONFIGS',
+  data: {},
+});
+
+export const updateConfigs = confs => ({
+  type: 'UPDATE_CONFIGS',
+  data: {
+    confs,
+  },
+});

@@ -2,6 +2,7 @@ import * as types from '../constants/actionTypes';
 
 const initialState = {
   undoRemove: true,
+  settings: false,
 };
 
 const popups = (state = initialState, action) => {

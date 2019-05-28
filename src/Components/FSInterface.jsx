@@ -36,25 +36,31 @@ class FSInterface extends Component {
   }
 
   componentDidMount() {
-    ipcRenderer.on('asynchronous-message', (event, arg) => {
+    ipcRenderer.send('asynchronous-message', message.getConfigs());
+    ipcRenderer.on('asynchronous-message', (_, arg) => {
       const { type, data } = arg;
       switch (type) {
-        case 'SEND_FILELIST': {
-          this.handleDirectory(data);
-          break;
-        }
+        case 'SEND_FILELIST':
+          return this.handleDirectory(data);
 
-        case 'SEND_ARGUMENTS': {
-          this.initializeArguments(data);
-          break;
-        }
+        case 'SEND_ARGUMENTS':
+          return this.initializeArguments(data);
+
+        case 'CONFIGS':
+          return this.initializeConfig(data);
 
         default:
           break;
       }
     });
+
     this.initializeArguments();
   }
+
+  initializeConfig = data => {
+    const { updateConfig } = this.props;
+    updateConfig(data);
+  };
 
   initializeArguments = async (args?) => {
     const { resetFileSystem } = this.props;
@@ -70,7 +76,6 @@ class FSInterface extends Component {
   handleFiles = ({ list, dir, handleDir }) => {
     const { updateDir, updateCurrentFile, setShuffle, clearTrash } = this.props;
     clearTrash();
-
     updateDir(dir);
     updateCurrentFile(list[0]);
     setShuffle(false);
@@ -186,22 +191,13 @@ class FSInterface extends Component {
 
   // TODO: rework! some dumb shit is going on here
   handleFileError = async path => {
-    const {
-      fileSystem,
-      viewModes,
-      updateFileList,
-      updatePosition,
-    } = this.props;
     const isExist = fs.existsSync(path);
     if (isExist) return;
-
-    const { currentPosition } = getFileSystem();
     const currentFile = getFileByPath(path);
     removeFileFromList(currentFile.fullPath);
   };
 
   render() {
-    const { fileSystem } = this.props;
     const currentFile = getCurrentFile();
     return (
       <React.Fragment>
@@ -209,15 +205,11 @@ class FSInterface extends Component {
         <FileHandler
           onRef={ref => (this.imageEl = ref)}
           onFileError={this.handleFileError}
-          // imageEl={this.imageEl}
-          // currentFile={currentFile}
         />
-
         <GUI
           imageEl={this.imageEl}
           onShuffle={this.handleToggleShuffle}
           FSInterface={this}
-          // onRef={onRef}
         />
       </React.Fragment>
     );
@@ -231,6 +223,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
+  updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
   clearTrash: () => ({ type: types.CLEAR_TRASH }),
   resetFileSystem: () => ({ type: types.RESET_FILESYSTEM }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),

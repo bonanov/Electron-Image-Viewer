@@ -4,15 +4,23 @@ import * as types from '../../constants/actionTypes';
 import { getPopups, undoFileRemoving } from '../../utils/getValueFromStore';
 import UndoRemove from './UndoRemove';
 import Animate from '../Animate';
+import Settings from './Settings';
 
 class Popups extends Component {
+  handlePopupClose = name => {
+    const { togglePopup } = this.props;
+
+    togglePopup(name);
+  };
+
   render() {
     const { popups, trash } = this.props;
     const { onUndoRemove } = this.props;
-    const { undoRemove } = popups;
+    const { undoRemove, settings } = popups;
     return (
       <aside className="popups-container">
         {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
+        {settings && <Settings onClose={() => this.handlePopupClose('settings')} />}
       </aside>
     );
   }

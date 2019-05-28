@@ -27,7 +27,8 @@ class ImageContainer extends Component {
   };
 
   render() {
-    const { fileSystem, viewModes } = this.props;
+    const { fileSystem, viewModes, config } = this.props;
+    const { backgroundBlur } = config;
     const { currentBlob } = fileSystem;
     const { handleRef } = this;
     const currentFile = getCurrentFile();
@@ -47,7 +48,7 @@ class ImageContainer extends Component {
 
     return (
       <React.Fragment>
-        {blur && this.renderBlur({ blur })}
+        {backgroundBlur && blur && this.renderBlur({ blur })}
         {this.renderImage({ fullPath, src, handleRef, style })}
       </React.Fragment>
     );
@@ -73,6 +74,7 @@ class ImageContainer extends Component {
 const mapStateToProps = state => ({
   viewModes: state.viewModes,
   fileSystem: state.fileSystem,
+  config: state.config,
 });
 
 const mapDispatchToProps = {

@@ -3,7 +3,32 @@ const electron = require('electron');
 const { app, BrowserWindow, ipcMain, Tray, Menu } = electron;
 const path = require('path');
 const url = require('url');
-const { webPreferences } = require('./electron.utils');
+const Store = require('electron-store');
+
+const conf = new Store();
+
+const defaultConfig = {
+  trayIcon: true,
+  keepInstance: true,
+  preloadImages: true,
+  imagesToPreload: 1,
+  backgroundBlur: true,
+  hqResize: true,
+};
+
+const config = conf.get('default');
+if (!config) conf.set('default', defaultConfig);
+if (conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+
+const preload = path.join(__dirname, 'preload.js');
+
+const webPreferences = {
+  nodeIntergation: true,
+  experimentalFeatures: true,
+  nodeIntegrationInWorker: true,
+  preload,
+  webSecurity: false,
+};
 
 const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
 
@@ -185,58 +210,63 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
   mainWindow.focus();
 });
 
+function updateConfigs({ confs }) {
+  conf.set('default', confs);
+}
+
 ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
   switch (type) {
-    case 'GET_PROPS': {
+    case 'GET_PROPS':
       secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_PROPS': {
+    case 'SEND_PROPS':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_RESIZED': {
+    case 'GET_RESIZED':
       secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_RESIZED': {
+    case 'SEND_RESIZED':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_COLOR': {
+    case 'GET_COLOR':
       secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_COLOR': {
+    case 'SEND_COLOR':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_BLURED': {
+    case 'GET_BLURED':
       thirdWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_BLURED': {
+    case 'SEND_BLURED':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_FILELIST': {
+    case 'GET_FILELIST':
       forthWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_FILELIST': {
+    case 'SEND_FILELIST':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
+
+    case 'GET_CONFIGS': {
+      const message = { type: 'CONFIGS', data: conf.get('default') };
+      mainWindow.webContents.send('asynchronous-message', message);
+      break;
     }
+
+    case 'UPDATE_CONFIGS':
+      updateConfigs(data);
+      break;
+
     default:
       break;
   }

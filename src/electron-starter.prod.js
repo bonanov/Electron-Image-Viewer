@@ -1,15 +1,31 @@
 const electron = require('electron');
 
-const { app, BrowserWindow, ipcMain } = electron;
-
+const { app, BrowserWindow, ipcMain, Tray, Menu } = electron;
 const path = require('path');
 const url = require('url');
-const { webPreferences } = require('./electron.utils');
+
+const isWin = process.platform === 'win32';
+
+const preload = `${__dirname}${isWin ? '\\preload.js' : '/preload.js'}`;
+
+const webPreferences = {
+  nodeIntergation: true,
+  experimentalFeatures: true,
+  nodeIntegrationInWorker: true,
+  preload,
+  webSecurity: false,
+};
+
+const iconPath = path.join(__dirname, '/assets/icons/64x64.png');
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+}
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
-
-const prod = !!process.env.ELECTRON_START_URL;
 
 let mainWindow;
 let secondWindow;
@@ -22,6 +38,13 @@ function closeAllWindows() {
   }
 }
 
+function closeAllOnly() {
+  mainWindow.close();
+  secondWindow.close();
+  thirdWindow.close();
+  forthWindow.close();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -29,26 +52,41 @@ function createWindow() {
     frame: true,
     show: false,
     title: 'bonana image viewer',
-    icon: path.join(__dirname, 'assets/icons/64x64.png'),
+    icon: path.join(__dirname, '/assets/icons/64x64.png'),
     webPreferences,
   });
+
+  // mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.on('devtools-opened', () => {
+  //   mainWindow.webContents.closeDevTools();
+  // });
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     // mainWindow.webContents.openDevTools();
   });
 
-  const startUrl =
-    process.env.ELECTRON_START_URL ||
-    url.format({
-      pathname: path.join(__dirname, '/../build/index.html'),
-      protocol: 'file:',
-      slashes: true,
-    });
+  const startUrl = url.format({
+    pathname: path.join(__dirname, '/index.html'),
+    protocol: 'file:',
+    slashes: true,
+  });
 
   mainWindow.loadURL(startUrl);
 
-  mainWindow.on('closed', closeAllWindows);
+  mainWindow.on('minimize', () => {
+    mainWindow.hide();
+    // secondWindow.close();
+    // thirdWindow.close();
+    // forthWindow.close();
+  });
+
+  // mainWindow.on('closed', closeAllWindows);
+  mainWindow.on('closed', () => (mainWindow = null));
+  // mainWindow.on('closed', () => {
+  //   const tray = new Tray(iconPath);
+  //   tray.on('click', () => initWindows);
+  // });
 }
 
 function createSecondWindow() {
@@ -59,20 +97,14 @@ function createSecondWindow() {
   });
 
   // secondWindow.show();
-  const urlDev = url.format({
-    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+  const startUrl = url.format({
+    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
     protocol: 'file:',
     slashes: true,
   });
-  const urlProd = url.format({
-    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
-    protocol: 'file:',
-    slashes: true,
-  });
-  const startUrl = prod ? urlProd : urlDev;
 
   secondWindow.loadURL(startUrl);
-  secondWindow.on('closed', closeAllWindows);
+  // secondWindow.on('closed', closeAllWindows);
 }
 
 function createThirdWindow() {
@@ -83,20 +115,14 @@ function createThirdWindow() {
   });
 
   // thirdWindow.show();
-  const urlDev = url.format({
-    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+  const startUrl = url.format({
+    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
     protocol: 'file:',
     slashes: true,
   });
-  const urlProd = url.format({
-    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
-    protocol: 'file:',
-    slashes: true,
-  });
-  const startUrl = prod ? urlProd : urlDev;
 
   thirdWindow.loadURL(startUrl);
-  thirdWindow.on('closed', closeAllWindows);
+  // thirdWindow.on('closed', closeAllWindows);
 }
 
 function createForthWindow() {
@@ -107,39 +133,70 @@ function createForthWindow() {
   });
 
   // forthWindow.show();
-  const urlDev = url.format({
-    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+  const startUrl = url.format({
+    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
     protocol: 'file:',
-    slashes: true,
+    slashes: false,
   });
-  const urlProd = url.format({
-    pathname: path.join(__dirname, '/../build/static/secondWindow/index.html'),
-    protocol: 'file:',
-    slashes: true,
-  });
-  const startUrl = prod ? urlProd : urlDev;
 
   forthWindow.loadURL(startUrl);
-  forthWindow.on('closed', closeAllWindows);
+  // forthWindow.on('closed', closeAllWindows);
 }
 
-app.on('ready', () => {
+function initWindows() {
   createSecondWindow();
   createThirdWindow();
   createForthWindow();
   createWindow();
+}
+let tray;
+function initTray() {
+  tray = new Tray(iconPath);
+  tray.on('click', () => {
+    if (!mainWindow) {
+      // createWindow();
+      initWindows();
+      mainWindow.hide();
+      return;
+    }
+
+    if (mainWindow.isVisible()) {
+      // closeAllOnly();
+      mainWindow.hide();
+      return;
+    }
+    mainWindow.show();
+  });
+}
+
+app.on('ready', () => {
+  initWindows();
+  initTray();
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    // app.quit();
   }
 });
 
-app.on('active', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
+// app.on('active', () => {
+//   if (mainWindow === null) {
+//     createWindow();
+//   }
+// });
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+  if (!mainWindow) initWindows();
+
+  mainWindow.webContents.send('asynchronous-message', {
+    type: 'SEND_ARGUMENTS',
+    data: commandLine,
+  });
+
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
 });
 
 ipcMain.on('asynchronous-message', (event, arg) => {

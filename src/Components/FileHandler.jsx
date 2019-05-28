@@ -41,20 +41,14 @@ class FileHandler extends Component {
     ipcRenderer.on('asynchronous-message', (event, arg) => {
       const { type, data } = arg;
       switch (type) {
-        case 'SEND_PROPS': {
-          this.setProps(data);
-          break;
-        }
+        case 'SEND_PROPS':
+          return this.setProps(data);
 
-        case 'SEND_RESIZED': {
-          this.setResized(data);
-          break;
-        }
+        case 'SEND_RESIZED':
+          return this.setResized(data);
 
-        case 'SEND_BLURED': {
-          this.setBlur(data);
-          break;
-        }
+        case 'SEND_BLURED':
+          return this.setBlur(data);
 
         default:
           break;
@@ -62,17 +56,13 @@ class FileHandler extends Component {
     });
   }
 
-  onResize = e => {
-    clearTimeout(this.resizeTimer);
-    this.resizeTimer = setTimeout(this.handleResize, 100);
-  };
-
   async componentDidUpdate(prevProps) {
     const { fileList, currentPosition } = getFileSystem();
     const currentFile = fileList[currentPosition];
     const newPosition = prevProps.fileSystem.currentPosition;
     const prevFile = prevProps.fileSystem.fileList[newPosition];
     if (!currentFile) return (document.title = 'Bonana Image Viewer');
+
     if (!prevFile || prevFile.fullPath !== currentFile.fullPath) {
       this.handleFileChange();
     }
@@ -80,16 +70,17 @@ class FileHandler extends Component {
 
   handleFileChange = async () => {
     const { updateCurrentBlob } = this.props;
+    const { config: c } = this.props;
     const currentFile = getCurrentFile();
     const { fileName } = currentFile;
     document.title = fileName;
     const { type } = currentFile;
     this.handleProps();
-    // this.handleBlur();
     updateCurrentBlob('');
+    if (c.backgroundBlur) this.handleBlur();
+    if (c.backgroundColor) this.handleColor();
+    if (c.hqResize && type !== 'gif') this.handleResize();
     this.handleScale();
-    // this.handleColor();
-    if (type !== 'gif') this.handleResize();
   };
 
   handleScale = () => {
@@ -151,12 +142,9 @@ class FileHandler extends Component {
   };
 
   setBlur = async ({ base64, fullPath: path }) => {
-    // const { fullPath, blurBlob } = getCurrentFilePath();
+    // TODO: blob caching causes memory leak
     const { fileList } = getFileSystem();
     const { updateFileList } = this.props;
-    // if (!fullPath) return;
-    // if (path !== fullPath) return;
-    // updateBase64(base64);
     const blob = await getBlobFromBase64(base64);
 
     const position = getFilePositionByPath(path);
@@ -247,6 +235,7 @@ class FileHandler extends Component {
 
 const mapStateToProps = state => ({
   fileSystem: state.fileSystem,
+  config: state.config,
 });
 
 const mapDispatchToProps = {

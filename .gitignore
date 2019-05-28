@@ -4,6 +4,7 @@
 /node_modules
 /.pnp
 .pnp.js
+dist/
 image-viewer-linux-x64/
 image-viewer-win32-x64/
 installers/

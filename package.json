@@ -1,13 +1,60 @@
 {
+  "build": {
+    "asar": true,
+    "appId": "Banana",
+    "mac": {
+      "category": "your.app.category.utilities"
+    },
+    "linux": {
+      "category": "Graphics"
+    },
+    "win": {
+      "files": [
+        "build/**/*",
+        "build/*",
+        "!build/static/js/Components",
+        "!build/static/js/constants",
+        "!build/static/js/reducers",
+        "!build/static/js/utils",
+        "!build/static/js/App.js",
+        "!build/static/js/index.js",
+        "!build/static/js/serviceWorker.js",
+        "node_modules/**/*"
+      ]
+    },
+    "files": [
+      "build/**/*",
+      "build/*",
+      "!build/static/js/Components",
+      "!build/static/js/constants",
+      "!build/static/js/reducers",
+      "!build/static/js/utils",
+      "!build/static/js/App.js",
+      "!build/static/js/index.js",
+      "!build/static/js/serviceWorker.js",
+      "node_modules/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/gm",
+      "node_modules/sharp"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  },
+  "postinstall": "electron-builder install-app-deps",
   "name": "image-viewer",
+  "email": "a39345@outlook.com",
   "description": "image viewer aye",
+  "author": "Bonan <john@doe.com>",
   "version": "0.1.0",
   "private": true,
   "homepage": "./",
-  "main": "src/electron-starter.prod.js",
+  "main": "public/electron.js",
+  "maineed": "src/electron-starter.prod.js",
   "dependencies": {
     "config": "^3.1.0",
-    "electron": "^5.0.1",
+    "electron-store": "^3.2.0",
     "fast-average-color": "^5.1.0",
     "font-awesome": "^4.7.0",
     "gm": "^1.23.1",
@@ -41,7 +88,12 @@
     "electron": "electron .",
     "deb64": "electron-installer-debian --src image-viewer-linux-x64/ --dest image-viewer-linux-x64/installers/ --arch amd64",
     "electron-build": "electron-packager . --overwrite --ignore=/node_modules/.bin --ignore=/public",
-    "electron-dev": "ELECTRON_START_URL=http://localhost:3000 electron ./src/electron-starter.js"
+    "electron-dev": "ELECTRON_START_URL=http://localhost:3000 electron ./src/electron-starter.js",
+    "pack": "electron-builder --dir -l",
+    "dist": "electron-builder -l pacman",
+    "dist-win": "electron-builder -w portable",
+    "postinstall": "electron-builder install-app-deps",
+    "electron-pack": "build -l"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -61,6 +113,7 @@
   "devDependencies": {
     "babel-eslint": "^10.0.1",
     "copy-webpack-plugin": "^5.0.3",
+    "electron": "^5.0.1",
     "electron-builder": "^20.41.0",
     "electron-devtools-installer": "^2.2.4",
     "electron-installer-debian": "^1.2.0",
@@ -74,6 +127,7 @@
     "eslint-plugin-react": "^7.13.0",
     "prettier": "^1.17.1",
     "react-app-rewired": "^2.1.3",
+    "typescript": "^3.4.5",
     "webpack-cli": "^3.3.2",
     "worker-loader": "^2.0.0",
     "worker-plugin": "^3.1.0"
