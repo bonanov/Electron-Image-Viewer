@@ -215,7 +215,7 @@ class GUI extends Component {
     const unclosableTargets = () =>
       target.closest(CONTROL_PANEL_SEL) || target.closest('.settings_container');
 
-    if (target && unclosableTargets) return;
+    if (target && unclosableTargets()) return;
     this.hideTimer = setTimeout(hideUi, HIDE_TIMEOUT);
   };
 
@@ -225,9 +225,6 @@ class GUI extends Component {
 
     this.handleZoom({ delta, clientX, clientY });
     const { imageEl } = this.props;
-    if (!imageEl) return;
-    // clearTimeout(this.wheelTimer);
-    // this.wheelTimer = setTimeout(this.handleWheelResize, 100);
   };
 
   handleWheelResize = () => {
