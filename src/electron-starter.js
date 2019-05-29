@@ -288,6 +288,10 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       clipboard.writeText(data.text.toString());
       break;
 
+    case 'WRITE_IMAGE_TO_CLIPBOARD':
+      clipboard.writeImage(data.path, clipboard);
+      break;
+
     default:
       break;
   }

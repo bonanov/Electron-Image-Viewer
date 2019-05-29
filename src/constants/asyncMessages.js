@@ -117,3 +117,10 @@ export const writeToClipboard = text => ({
     text,
   },
 });
+
+export const writeImageToClipboard = path => ({
+  type: 'WRITE_IMAGE_TO_CLIPBOARD',
+  data: {
+    path,
+  },
+});

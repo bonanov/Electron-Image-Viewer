@@ -308,6 +308,7 @@ body {
 }
 
 .undo-remove_container {
+  box-shadow: none !important;
   /* width: 160px; */
   max-width: 300px;
   margin: auto;
@@ -526,4 +527,39 @@ body {
 .info-value.date {
   color: #333333;
   font-weight: 600;
+}
+
+.context-menu {
+  min-width: 150px;
+  min-height: 50px;
+  background: #e5e5e5;
+  margin: 0;
+  left: unset;
+  top: unset;
+  right: unset;
+  bottom: unset;
+  padding: 7px 0;
+  overflow: hidden;
+  border-radius: 5px;
+  user-select: none;
+}
+
+.context-menu-item {
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: 0.05s;
+}
+
+.context-menu-item:hover {
+  color: #e5e5e5;
+  background: #3978B2;
+  opacity: 0.7;
+}
+
+.context-menu-item:active {
+  opacity: 0.5;
+}
+
+.popup {
+  box-shadow: 0px 10px 20px 0 hsla(0, 0%, 0%, 0.2);
 }

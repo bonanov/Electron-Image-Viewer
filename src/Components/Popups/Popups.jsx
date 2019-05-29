@@ -6,6 +6,7 @@ import UndoRemove from './UndoRemove';
 import Animate from '../Animate';
 import Settings from './Settings';
 import Info from './Info';
+import ContextMenu from './ContextMenu';
 
 class Popups extends Component {
   handlePopupClose = name => {
@@ -16,13 +17,15 @@ class Popups extends Component {
 
   render() {
     const { popups, trash } = this.props;
-    const { onUndoRemove } = this.props;
-    const { undoRemove, settings, info } = popups;
+    const { onUndoRemove, onDelete } = this.props;
+    const { undoRemove, settings, info, contextMenu } = popups;
+    const { contextMenuPos } = popups;
     return (
       <aside className="popups-container">
         {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
         {settings && <Settings onClose={() => this.handlePopupClose('settings')} />}
         {info && <Info />}
+        {contextMenu && <ContextMenu onDelete={onDelete} position={contextMenuPos} />}
       </aside>
     );
   }

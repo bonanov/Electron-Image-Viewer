@@ -35,5 +35,6 @@ export const RESET_FILESYSTEM = 'RESET_FILESYSTEM';
 
 // popups
 export const TOGGLE_POPUP = 'TOGGLE_POPUP';
+export const SET_CONTEXT_MENU_AT = 'SET_CONTEXT_MENU_AT';
 export const ADD_POPUP = 'ADD_POPUP';
 export const REMOVE_POPUP = 'REMOVE_POPUP';

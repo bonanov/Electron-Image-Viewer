@@ -149,12 +149,27 @@ class GUI extends Component {
     hideUi();
   };
 
+  handleRmb = e => {
+    const { setContextMenuAt, togglePopup } = this.props;
+    const currentFile = getCurrentFile();
+    if (!currentFile) return;
+    const { clientX, clientY } = e;
+    setContextMenuAt({ x: clientX + 1, y: clientY + 1 });
+    togglePopup('contextMenu');
+  };
+
   handleMouseDown = e => {
     const { imageEl, viewModes } = this.props;
+    const { removePopup } = this.props;
     const { imagePosition } = viewModes;
+    const { target } = e;
+    const targetNotContextMenu = !target.closest('.context-menu');
+    if (e.which === 3 && targetNotContextMenu) this.handleRmb(e);
+    if (e.which !== 1) return;
+
     if (!imageEl) return;
 
-    const { target } = e;
+    if (targetNotContextMenu) removePopup('contextMenu');
     if (target.closest(IMAGE_CONTAINER_SEL)) {
       const { left, top } = imageEl.getBoundingClientRect();
       const { clientX, clientY } = e;
@@ -191,9 +206,9 @@ class GUI extends Component {
     updateImagePosition({ x, y });
   };
 
-  handleMouseUp = () => {
+  handleMouseUp = e => {
+    const { togglePopup } = this.props;
     const { moving } = this.state;
-
     if (moving) {
       this.setState({ moving: false });
       document.body.classList.toggle('image-moving');
@@ -224,7 +239,9 @@ class GUI extends Component {
     const delta = e.deltaY > 0 ? -1 : 1;
     const { clientX, clientY, target } = e;
 
-    if (target.closest('.info_container')) return;
+    if (target.closest('.popup')) return;
+
+    if (target.closest('.control-panel-bottom')) return this.handleShiftImage(delta);
 
     this.handleZoom({ delta, clientX, clientY });
     const { imageEl } = this.props;
@@ -357,7 +374,7 @@ class GUI extends Component {
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.updating = false;
-    }, 50);
+    }, 20);
   };
 
   handleSettingsOpen = () => {
@@ -422,7 +439,7 @@ class GUI extends Component {
     return (
       <React.Fragment>
         <ToastContainer />
-        <Popups onUndoRemove={this.handleUndoRemove} />
+        <Popups onDelete={this.handleFileDelete} onUndoRemove={this.handleUndoRemove} />
         {this.mainGui()}
         {this.preloader()}
       </React.Fragment>
@@ -439,6 +456,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
   togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
+  setContextMenuAt: payload => ({ type: types.SET_CONTEXT_MENU_AT, payload }),
   addPopup: payload => ({ type: types.ADD_POPUP, payload }),
   removePopup: payload => ({ type: types.REMOVE_POPUP, payload }),
   setZoomMode: payload => ({ type: types.SET_ZOOM_MODE, payload }),
