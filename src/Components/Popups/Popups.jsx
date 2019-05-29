@@ -5,6 +5,7 @@ import { getPopups, undoFileRemoving } from '../../utils/getValueFromStore';
 import UndoRemove from './UndoRemove';
 import Animate from '../Animate';
 import Settings from './Settings';
+import Info from './Info';
 
 class Popups extends Component {
   handlePopupClose = name => {
@@ -16,11 +17,12 @@ class Popups extends Component {
   render() {
     const { popups, trash } = this.props;
     const { onUndoRemove } = this.props;
-    const { undoRemove, settings } = popups;
+    const { undoRemove, settings, info } = popups;
     return (
       <aside className="popups-container">
         {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
         {settings && <Settings onClose={() => this.handlePopupClose('settings')} />}
+        {info && <Info />}
       </aside>
     );
   }

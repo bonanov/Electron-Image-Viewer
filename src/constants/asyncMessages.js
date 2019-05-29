@@ -84,9 +84,36 @@ export const getConfigs = () => ({
   data: {},
 });
 
+export const getArguments = () => ({
+  type: 'GET_ARGUMENTS',
+  data: {},
+});
+
 export const updateConfigs = confs => ({
   type: 'UPDATE_CONFIGS',
   data: {
     confs,
+  },
+});
+
+export const getExif = fullPath => ({
+  type: 'GET_EXIF',
+  data: {
+    fullPath,
+  },
+});
+
+export const sendExif = ({ exifData, fullPath }) => ({
+  type: 'SEND_EXIF',
+  data: {
+    exifData,
+    fullPath,
+  },
+});
+
+export const writeToClipboard = text => ({
+  type: 'WRITE_TO_CLIPBOARD',
+  data: {
+    text,
   },
 });

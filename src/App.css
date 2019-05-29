@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap&subset=cyrillic,cyrillic-ext,latin-ext');
+@import url('https://fonts.googleapis.com/css?family=Quicksand:300,400,500,700&display=swap&subset=latin-ext');
+
 body {
   background: #222;
   overflow: hidden;
+  font-family: Quicksand;
 }
 
 .blur-container {
@@ -432,3 +436,94 @@ body {
   margin-top: 10px;
 }
 
+.file-info {
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  transform: translateX(-6px);
+  line-height: 1.8;
+  color: #404040;
+}
+
+.info_container {
+  background: rgba(229, 229, 229, 0.7);
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 100px;
+  right: unset;
+  z-index: 101;
+  max-width: 300px;
+  width: 100%;
+  padding: 5px 15px 5px 5px;
+  /* font-family: Montserrat; */
+  user-select: none;
+  overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item_container {
+  margin-left: 10px;
+}
+
+.info-title {
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.info {
+  margin: 5px;
+  font-size: 15px;
+}
+
+.info-item {
+  color: #333333;
+  font-weight: 600;
+  font-weight: 600;
+
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: 0.1s;
+  padding: 2px 0;
+}
+
+/* .info-item.date {
+  white-space: normal;
+} */
+
+.exif-info_title {
+  cursor: pointer;
+}
+
+.info-item:hover, .exif-info_title:hover {
+  opacity: 0.8;
+}
+
+.info-item:active, .exif-info_title:active {
+  opacity: 0.6;
+}
+
+
+.info-name {
+  color: #333;
+  font-weight: 400;
+  margin-right: 5px;
+}
+
+.exif-info {
+  overflow-y: auto
+}
+
+.info-title .control {
+  font-size: 18px;
+}
+
+.info-value.date {
+  color: #333333;
+  font-weight: 600;
+}

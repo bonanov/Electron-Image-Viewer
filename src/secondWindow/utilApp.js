@@ -5,6 +5,7 @@ import {
   getAverageColor,
   blurImage,
   getDirectory,
+  getExif,
 } from './utils';
 
 const { ipcRenderer } = window.electron;
@@ -47,10 +48,15 @@ ipcRenderer.on('asynchronous-message', async (event, arg) => {
       const { dir } = data;
       const fileList = await getDirectory(dir);
       const newMessage = { fileList };
-      ipcRenderer.send(
-        'asynchronous-message',
-        message.sendFileList(newMessage)
-      );
+      ipcRenderer.send('asynchronous-message', message.sendFileList(newMessage));
+      break;
+    }
+
+    case 'GET_EXIF': {
+      const { fullPath } = data;
+      const exifData = await getExif(fullPath);
+      const message_ = message.sendExif({ exifData, fullPath });
+      ipcRenderer.send('asynchronous-message', message_);
       break;
     }
 

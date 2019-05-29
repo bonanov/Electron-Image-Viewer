@@ -86,6 +86,7 @@ class GUI extends Component {
     if (key === '-') return this.handleZoom({ delta: -1 });
     if (code === 'End') return updatePosition(fileList.length - 1);
     if (code === 'KeyF') return toggleFullscreen();
+    if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
     if (key === 'F11') {
       e.preventDefault();
@@ -221,7 +222,9 @@ class GUI extends Component {
 
   handleWheel = e => {
     const delta = e.deltaY > 0 ? -1 : 1;
-    const { clientX, clientY } = e;
+    const { clientX, clientY, target } = e;
+
+    if (target.closest('.info_container')) return;
 
     this.handleZoom({ delta, clientX, clientY });
     const { imageEl } = this.props;
@@ -362,6 +365,14 @@ class GUI extends Component {
     togglePopup('settings');
   };
 
+  handleInfo = () => {
+    const { togglePopup } = this.props;
+    const { fullPath } = getCurrentFile();
+    console.log();
+    togglePopup('info');
+    // ipcRenderer.send('asynchronous-message', message.getExif(fullPath));
+  };
+
   mainGui = () => {
     const { viewModes, fileSystem } = this.props;
     const { currentPosition, fileList } = fileSystem;
@@ -374,6 +385,7 @@ class GUI extends Component {
           hidden={viewModes.uiHidden}
           amount={fileList.length}
           currentPosition={currentPosition}
+          onInfo={this.handleInfo}
         />
         <ControlPanel
           onToggleFullscreen={() => toggleFullscreen()}

@@ -1,16 +1,23 @@
 import sharp from 'sharp';
-import stackblur from 'stackblur';
 
 import gm from 'gm';
 import fs from 'fs';
-
 import FastAverageColor from 'fast-average-color';
 import { FILE_EXT, FILE_TYPES } from '../constants/fileTypes';
 
-const fac = new FastAverageColor();
+const setImmediate = require('setimmediate');
 
-export const getAverageColor = async buffer => {
-  const color = fac.getColorFromArray4(buffer);
+const ExifImage = require('exif').ExifImage;
+
+export const getExif = async image => {
+  const promise = await new Promise(resolve => {
+    // eslint-disable-next-line no-new
+    new ExifImage({ image }, (err, data) => {
+      if (err) return resolve({ err });
+      resolve(data);
+    });
+  });
+  return promise;
 };
 
 export const blurImage = async ({ fullPath, width, height }) => {
@@ -85,7 +92,7 @@ const getFileType = name => name.replace(FILE_EXT, '$1');
 const formatFileObject = async (fileNameList, dir) => {
   const fileList = [];
   await fileNameList.forEach(async fileName => {
-    const { mtimeMs, atimeMs, ctimeMs } = await fs.statSync(dir + fileName);
+    const { size, mtimeMs, atimeMs, ctimeMs } = await fs.statSync(dir + fileName);
     const id = Math.floor(Math.random() * Date.now());
     const type = getFileType(fileName);
     const object = {
@@ -93,7 +100,7 @@ const formatFileObject = async (fileNameList, dir) => {
       fullPath: (dir + fileName).replace(/\?/g, '%3F'),
       url: '',
       dir: dir.replace(/\?/g, '%3F'),
-      size: '',
+      size,
       mtime: mtimeMs,
       atime: atimeMs,
       ctime: ctimeMs,

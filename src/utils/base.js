@@ -160,23 +160,24 @@ const getFiles = arg => {
 };
 
 export const parseArguments = async args => {
-  const argList = args.slice(1);
   const fileList = [];
-  argList.forEach(arg => {
+  const parseArgs = {
+    list: [],
+    dir: '',
+    omitDir: false,
+  };
+  args.forEach(arg => {
     const ar = getFiles(arg);
     if (ar) fileList.push(ar);
   });
-  if (!fileList) return;
-  const newFileList = {};
-  newFileList.list = await formatFileObject(fileList);
-  const firstFile = newFileList.list[0];
-  if (!firstFile) return;
-  newFileList.dir = firstFile.dir;
-  newFileList.handleDir = true;
-  if (newFileList.list.length > 1) {
-    newFileList.handleDir = false;
-  }
-  return newFileList;
+
+  if (!fileList) return parseArgs;
+  parseArgs.list = await formatFileObject(fileList);
+  const firstFile = parseArgs.list[0];
+  if (!firstFile) return parseArgs;
+  parseArgs.dir = firstFile.dir;
+
+  return parseArgs;
   // for (let i = 0; i < argv.length; i++) {}
 };
 

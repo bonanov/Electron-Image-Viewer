@@ -4,7 +4,7 @@ const path = require('path');
 // const WorkerPlugin = require('worker-plugin');
 
 module.exports = {
-  externals: ['sharp', 'gm', 'fs', 'process'],
+  externals: ['sharp', 'gm', 'fs', 'process', 'exif', 'setImmediate'],
   target: 'node',
   resolve: {
     extensions: ['.js', '.node'],

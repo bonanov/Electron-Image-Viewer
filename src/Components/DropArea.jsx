@@ -18,22 +18,14 @@ class DropArea extends Component {
 
   componentDidMount() {
     const { startEvents, endEvents } = this;
-    startEvents.map(ev =>
-      document.addEventListener(ev, this.handleDropStart, false)
-    );
-    endEvents.map(ev =>
-      document.addEventListener(ev, this.handleDropEnd, false)
-    );
+    startEvents.map(ev => document.addEventListener(ev, this.handleDropStart, false));
+    endEvents.map(ev => document.addEventListener(ev, this.handleDropEnd, false));
   }
 
   componentWillUnmount() {
     const { startEvents, endEvents } = this;
-    startEvents.map(ev =>
-      document.removeEventListener(ev, this.handleDropStart, false)
-    );
-    endEvents.map(ev =>
-      document.removeEventListener(ev, this.handleDropEnd, false)
-    );
+    startEvents.map(ev => document.removeEventListener(ev, this.handleDropStart, false));
+    endEvents.map(ev => document.removeEventListener(ev, this.handleDropEnd, false));
   }
 
   handleDropStart = e => {
@@ -53,8 +45,7 @@ class DropArea extends Component {
     const droppedText = e.dataTransfer.getData('text');
     // console.log(droppedText);
     if (droppedText) {
-      this.onTextDrop(droppedText);
-      return;
+      return this.onTextDrop(droppedText);
     }
 
     if (!firstItem) return;
@@ -127,28 +118,36 @@ class DropArea extends Component {
     return fileObject;
   };
 
-  formatUrlObject = file => {
-    const id = Math.floor(Math.random() * Date.now());
-    const dir = file.path.replace(file.name, '');
-    const fileObject = {
-      filename: file.name,
-      fullPath: '',
-      url: file.url,
-      dir,
-      type: file.type,
-      size: '',
-      lastModified: '',
-      isUrl: true,
-      id,
-    };
+  // formatUrl = url => {
+  //   const id = Math.floor(Math.random() * Date.now());
+  //   const dir = url.path.replace(file.name, '');
+  //   const fileObject = {
+  //     id,
+  //     fileName: file.name,
+  //     fullPath: file.path,
+  //     url: '',
+  //     dir,
+  //     type,
+  //     size: file.size,
+  //     lastModified: file.lastModified,
+  //     isUrl: false,
+  //   };
 
-    return fileObject;
-  };
+  //   return fileObject;
+  // };
 
   onTextDrop = text => {
-    console.log(text);
-    // const { onLinkDrop } = this.props;
-    // const isSupportedType = text.match(SUPPORTED_EXTENSIONS);
+    const { onLinkDrop } = this.props;
+    const isSupportedType = text.match(SUPPORTED_EXTENSIONS);
+    const isLink = /^(http|ftp)(s)?/.test(text);
+    if (!isLink || !isSupportedType) return;
+    let img = new Image();
+    img.onload = () => {
+      onLinkDrop(text);
+      img = null;
+    };
+    img.src = text;
+
     // const type = isSupportedType[0];
     // if (type) {
     //   onLinkDrop(text);
@@ -156,8 +155,6 @@ class DropArea extends Component {
     // this.handleTextDrop(type);
     // }
   };
-
-  handleTextDrop = type => {};
 
   handleDirectoryDrop = item => {
     const dirReader = item.createReader();

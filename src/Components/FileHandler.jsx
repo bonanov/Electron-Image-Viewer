@@ -50,6 +50,9 @@ class FileHandler extends Component {
         case 'SEND_BLURED':
           return this.setBlur(data);
 
+        case 'SEND_EXIF':
+          return this.setExif(data);
+
         default:
           break;
       }
@@ -76,6 +79,7 @@ class FileHandler extends Component {
     document.title = fileName;
     const { type } = currentFile;
     this.handleProps();
+
     updateCurrentBlob('');
     if (c.backgroundBlur) this.handleBlur();
     if (c.backgroundColor) this.handleColor();
@@ -162,6 +166,7 @@ class FileHandler extends Component {
     if (!fullPath) return;
 
     const closestFiles = getClosestNFiles(1);
+    ipcRenderer.send('asynchronous-message', message.getExif(fullPath));
     closestFiles.forEach(file => {
       if (file.fileProps) return;
       ipcRenderer.send('asynchronous-message', message.getProps(file.fullPath));
@@ -187,6 +192,21 @@ class FileHandler extends Component {
     const clonedList = clone(fileList);
     // if (clonedList[position].fileProps) return;
     clonedList[position].fileProps = { width, height, aspect };
+    updateFileList(clonedList);
+  };
+
+  setExif = ({ exifData, fullPath }) => {
+    if (exifData.err) return;
+
+    const { updateFileList } = this.props;
+    const { fileList } = getFileSystem();
+
+    const position = getFilePositionByPath(fullPath);
+    const clonedList = clone(fileList);
+    // if (clonedList[position].fileProps) return;
+    const currentProps = clonedList[position].fileProps;
+    if (!currentProps) clonedList[position].fileProps = {};
+    clonedList[position].fileProps = { ...currentProps, exifData };
     updateFileList(clonedList);
   };
 

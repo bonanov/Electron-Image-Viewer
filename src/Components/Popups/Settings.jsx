@@ -12,9 +12,9 @@ class Settings extends Component {
       { name: 'hqResize', text: 'High quality image resizing' },
       { name: 'keepInstance', text: 'Keep process working in the background' },
       { name: 'trayIcon', text: 'Keep tray icon' },
-      { name: 'backgroundBlur', text: 'Background blur (slow)' },
+      { name: 'backgroundBlur', text: 'Background blur (might be slow)' },
       { name: 'backgroundColor', text: 'Background average color' },
-      { name: 'preloadImages', text: 'Preload images (you don’t want to turn this off)' },
+      { name: 'preloadImages', text: "Preload images (you don't want to turn this off)" },
     ];
   }
 

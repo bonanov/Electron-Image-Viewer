@@ -4,6 +4,7 @@ import { mod } from '../utils/base';
 const initialState = {
   fileList: [],
   currentFile: {},
+  currentLink: '',
   currentPosition: 0,
   base64: '',
   dir: '',
@@ -16,9 +17,14 @@ const fileSystem = (state = initialState, action) => {
     return { ...initialState };
   }
 
+  if (action.type === types.UPDATE_CURRENT_LINK) {
+    return { ...state, currentLink: action.payload };
+  }
+
   if (action.type === types.UPDATE_FILESYSTEM) {
     return { ...state, ...action.payload };
   }
+
   if (action.type === types.UPDATE_FILELIST) {
     return { ...state, fileList: action.payload };
   }

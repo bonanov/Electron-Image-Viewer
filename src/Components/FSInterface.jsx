@@ -53,8 +53,8 @@ class FSInterface extends Component {
           break;
       }
     });
-
-    this.initializeArguments();
+    ipcRenderer.send('asynchronous-message', message.getArguments());
+    // this.initializeArguments();
   }
 
   initializeConfig = data => {
@@ -62,30 +62,35 @@ class FSInterface extends Component {
     updateConfig(data);
   };
 
-  initializeArguments = async (args?) => {
+  initializeArguments = async args => {
     const { resetFileSystem } = this.props;
     resetFileSystem();
-    const { argv } = remote.process;
-    if (!argv && !args) return;
+    if (!args._) return;
 
-    const fileList = await parseArguments(args || argv);
-    if (!fileList) return;
-    this.handleFiles(fileList);
+    const parsedArgs = await parseArguments(args._);
+    if (!parsedArgs || !parsedArgs.list.length) return;
+
+    if (args.omit || parsedArgs.list.length > 1) parsedArgs.omitDir = true;
+    else parsedArgs.omitDir = false;
+    this.handleFiles(parsedArgs);
   };
 
-  handleFiles = ({ list, dir, handleDir }) => {
+  handleLinkDrop = link => {
+    const { updateCurrentLink } = this.props;
+
+    // TODO: Handle links
+    // updateCurrentLink(link);
+  };
+
+  handleFiles = ({ list, dir, omitDir = false }) => {
     const { updateDir, updateCurrentFile, setShuffle, clearTrash } = this.props;
     clearTrash();
     updateDir(dir);
     updateCurrentFile(list[0]);
     setShuffle(false);
     const callback = this.findPosition;
-
-    // if (handleDir) this.initializeDirectory(dir, callback);
-    if (handleDir) {
-      ipcRenderer.send('asynchronous-message', message.getFileList(dir));
-    }
-    if (!handleDir) this.initializeFileList(list, callback);
+    if (!omitDir) ipcRenderer.send('asynchronous-message', message.getFileList(dir));
+    else this.initializeFileList(list, callback);
   };
 
   handleDirectory = ({ fileList: oldList }) => {
@@ -143,7 +148,6 @@ class FSInterface extends Component {
   initializeFileList = async (fileList, callback?) => {
     const { updateFileList } = this.props;
     const listFiltered = await this.filterFileList(fileList);
-    console.log(listFiltered);
     updateFileList(listFiltered);
   };
 
@@ -201,7 +205,11 @@ class FSInterface extends Component {
     const currentFile = getCurrentFile();
     return (
       <React.Fragment>
-        <DropArea currentFile={currentFile} onDrop={this.handleFiles} />
+        <DropArea
+          currentFile={currentFile}
+          onDrop={this.handleFiles}
+          onLinkDrop={this.handleLinkDrop}
+        />
         <FileHandler
           onRef={ref => (this.imageEl = ref)}
           onFileError={this.handleFileError}
@@ -224,6 +232,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
+  updateCurrentLink: payload => ({ type: types.UPDATE_CURRENT_LINK, payload }),
   clearTrash: () => ({ type: types.CLEAR_TRASH }),
   resetFileSystem: () => ({ type: types.RESET_FILESYSTEM }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
