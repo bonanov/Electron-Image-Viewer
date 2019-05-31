@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 
 const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
@@ -45,12 +46,13 @@ const defaultConfig = {
   backgroundBlur: true,
   hqResize: true,
   slideTimeOut: 1000,
+  backgroundColor: false,
 };
 
 const config = conf.get('default');
 if (!config) conf.set('default', defaultConfig);
-if (conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
-if (conf.get('default.slideTimeOut')) conf.set('default.slideTimeOut', 1000);
+if (!conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+if (!conf.get('default.slideTimeOut')) conf.set('default.slideTimeOut', 1000);
 
 const preload = path.join(__dirname, 'preload.js');
 
@@ -229,6 +231,7 @@ app.on('before-quit', () => {
 function parseArgumets(args) {
   const argvs = args.slice(isDev ? 2 : 1);
   const cli = parseArgs({ text: cliText, argv: argvs }, cliConf);
+  console.log(cli);
   if (cli.flags.v || cli.flags.h) return closeAllWindows();
   return cli.flags;
 }
@@ -252,6 +255,7 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 
 function updateConfigs({ confs }) {
   const curConf = conf.get('default');
+  console.log(confs);
   conf.set('default', { ...curConf, ...confs });
 }
 

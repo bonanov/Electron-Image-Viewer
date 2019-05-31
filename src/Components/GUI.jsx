@@ -164,11 +164,11 @@ class GUI extends Component {
   };
 
   handleRmb = e => {
-    const { setContextMenuAt, togglePopup } = this.props;
+    const { togglePopup } = this.props;
     const currentFile = getCurrentFile();
     if (!currentFile) return;
-    const { clientX, clientY } = e;
-    setContextMenuAt({ x: clientX + 1, y: clientY + 1 });
+    const { target } = e;
+    if (!target.closest('.image-container')) return;
     togglePopup('contextMenu');
   };
 
@@ -249,7 +249,11 @@ class GUI extends Component {
       target.closest('.rc-tooltip-inner');
 
     if (target && unclosableTargets()) return;
-    this.hideTimer = setTimeout(hideUi, HIDE_TIMEOUT);
+
+    this.hideTimer = setTimeout(() => {
+      if (this.props.popups.contextMenu) return;
+      hideUi();
+    }, HIDE_TIMEOUT);
   };
 
   handleWheel = e => {
@@ -506,6 +510,7 @@ const mapStateToProps = state => ({
   viewModes: state.viewModes,
   fileSystem: state.fileSystem,
   config: state.config,
+  popups: state.popups,
 });
 
 const mapDispatchToProps = {
@@ -513,7 +518,6 @@ const mapDispatchToProps = {
   updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
   togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
-  setContextMenuAt: payload => ({ type: types.SET_CONTEXT_MENU_AT, payload }),
   addPopup: payload => ({ type: types.ADD_POPUP, payload }),
   removePopup: payload => ({ type: types.REMOVE_POPUP, payload }),
   setZoomMode: payload => ({ type: types.SET_ZOOM_MODE, payload }),

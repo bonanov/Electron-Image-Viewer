@@ -145,6 +145,7 @@ const getDirectory = async dir => {
 
 const getFiles = arg => {
   const isExist = fs.existsSync(arg);
+  console.log(arg);
   if (!isExist) return;
   // const isDirectory = fs.lstatSync(arg).isDirectory();
   const isFile = fs.lstatSync(arg).isFile();

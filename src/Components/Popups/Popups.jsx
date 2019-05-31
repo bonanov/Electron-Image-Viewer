@@ -25,13 +25,12 @@ class Popups extends Component {
         {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
         {settings && <Settings onClose={() => this.handlePopupClose('settings')} />}
         <Info visible={info} />
-        {contextMenu && (
-          <ContextMenu
-            visible={contextMenu}
-            onDelete={onDelete}
-            position={contextMenuPos}
-          />
-        )}
+
+        <ContextMenu
+          visible={contextMenu}
+          onDelete={onDelete}
+          position={contextMenuPos}
+        />
       </aside>
     );
   }

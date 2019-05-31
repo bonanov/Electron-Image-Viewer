@@ -464,7 +464,13 @@ body {
   flex-direction: column;
   transform: translateX(-80%);
   opacity: 0.0;
+  
   transition: 0.1s ease-in-out;
+}
+
+.info_container:not(.info_container_visible) {
+  display: none;
+  visibility: visible;
 }
 
 .info_container:not(.info_container_visible) .info-item {

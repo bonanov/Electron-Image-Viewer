@@ -68,6 +68,7 @@ class FSInterface extends Component {
     if (!args._) return;
 
     const parsedArgs = await parseArguments(args._);
+    console.log(parsedArgs);
     if (!parsedArgs || !parsedArgs.list.length) return;
 
     if (args.omit || parsedArgs.list.length > 1) parsedArgs.omitDir = true;
