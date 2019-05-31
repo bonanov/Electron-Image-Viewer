@@ -36,7 +36,8 @@
     ],
     "asarUnpack": [
       "node_modules/gm",
-      "node_modules/sharp"
+      "node_modules/sharp",
+      "node_modules/exif"
     ],
     "directories": {
       "buildResources": "assets"
@@ -57,6 +58,7 @@
     "config": "^3.1.0",
     "date-and-time": "^0.6.3",
     "electron-args": "^0.1.0",
+    "electron-is-dev": "^1.1.0",
     "electron-store": "^3.2.0",
     "exif": "^0.6.0",
     "fast-average-color": "^5.1.0",
@@ -80,12 +82,11 @@
     "trash": "^5.2.0"
   },
   "scripts": {
-    "all": "run-p watch electron-dev",
-    "watch": "run-p start watch-less",
-    "watch-less": "less-watch-compiler src/less/ src/css-auto/ main.less",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "build-app": "npm-run-all build bundle-dev bundle-move electron-move electron-build",
+    "watch-react": "react-scripts start",
+    "build-react": "react-scripts build",
+    "build-basic": "npm-run-all build-react bundle-dev bundle-move electron-move",
+    "build-linux": "npm-run-all build-basic dist-linux",
+    "build-win": "npm-run-all build-basic dist-linux",
     "bundle-dev": "webpack src/secondWindow/utilApp.js -o src/secondWindow/bundle.js",
     "bundle-move": "cp src/secondWindow/ build/static/js/secondWindow/ -r",
     "electron-move": "cp src/electron-starter.prod.js build/electron.js -r && cp src/preload.js build/preload.js -r && cp src/assets build/assets -r",
@@ -98,10 +99,9 @@
     "electron-build": "electron-packager . --overwrite --ignore=/node_modules/.bin --ignore=/public",
     "electron-dev": "ELECTRON_START_URL=http://localhost:3000 electron ./src/electron-starter.js",
     "pack": "electron-builder --dir -l",
-    "dist": "electron-builder -l pacman",
+    "dist-linux": "electron-builder -l pacman",
     "dist-win": "electron-builder -w portable",
-    "postinstall": "electron-builder install-app-deps",
-    "electron-pack": "build -l"
+    "postinstall": "electron-builder install-app-deps"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -125,7 +125,6 @@
     "electron-builder": "^20.41.0",
     "electron-devtools-installer": "^2.2.4",
     "electron-installer-debian": "^1.2.0",
-    "electron-is-dev": "^1.1.0",
     "electron-rebuild": "^1.8.4",
     "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.1.0",

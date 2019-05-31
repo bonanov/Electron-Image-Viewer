@@ -2,12 +2,14 @@ import sharp from 'sharp';
 
 import gm from 'gm';
 import fs from 'fs';
-import FastAverageColor from 'fast-average-color';
+import { ExifImage } from 'exif';
 import { FILE_EXT, FILE_TYPES } from '../constants/fileTypes';
 
 const setImmediate = require('setimmediate');
 
-const ExifImage = require('exif').ExifImage;
+const { ipcRenderer } = window.electron;
+
+// const ExifImage = require('exif').ExifImage;
 
 export const getExif = async image => {
   const promise = await new Promise(resolve => {
@@ -117,7 +119,9 @@ export const getDirectory = async dir => {
   const files = await new Promise(resolve => {
     fs.readdir(dir, async (err, fileList) => {
       const list = await formatFileObject(fileList, dir);
+      // ipcRenderer.send('asynchronous-message', { type: 'LOG', data: list });
       const listFiltered = await filterFileList(list);
+      // ipcRenderer.send('asynchronous-message', { type: 'LOG', data: listFiltered });
       resolve(listFiltered);
     });
   });

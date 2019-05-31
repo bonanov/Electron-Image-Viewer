@@ -1,12 +1,56 @@
 const electron = require('electron');
 
-const { app, BrowserWindow, ipcMain, Tray, Menu } = electron;
+const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
 const path = require('path');
 const url = require('url');
+const isDev = require('electron-is-dev');
+const Store = require('electron-store');
+const parseArgs = require('electron-args');
 
-const isWin = process.platform === 'win32';
+let argv = process.argv;
 
-const preload = `${__dirname}${isWin ? '\\preload.js' : '/preload.js'}`;
+const cliText = `
+    Image Viewer
+
+    Usage
+      $ image-viewer [path]
+
+    Options
+      --help        show help
+      -o, --omit    skip directory parse and show only single file
+
+    Examples
+      $ sample-viewer image.jpg
+      $ sample-viewer image.jpg --omit
+  `;
+
+const cliConf = {
+  alias: {
+    h: 'help',
+    o: 'omit',
+    v: 'version',
+  },
+  default: {
+    omit: false,
+  },
+};
+
+const conf = new Store();
+
+const defaultConfig = {
+  trayIcon: true,
+  keepInstance: true,
+  preloadImages: true,
+  imagesToPreload: 1,
+  backgroundBlur: true,
+  hqResize: true,
+};
+
+const config = conf.get('default');
+if (!config) conf.set('default', defaultConfig);
+if (conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+
+const preload = path.join(__dirname, 'preload.js');
 
 const webPreferences = {
   nodeIntergation: true,
@@ -16,21 +60,32 @@ const webPreferences = {
   webSecurity: false,
 };
 
-const iconPath = path.join(__dirname, '/assets/icons/64x64.png');
+const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
 
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
-  app.quit();
+  closeAllWindows();
 }
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
+let tray;
 let mainWindow;
 let secondWindow;
 let thirdWindow;
 let forthWindow;
+const width = 1280;
+const height = 720;
+let maxWidth = 1920;
+let maxHeight = 1920;
+
+const wins = {
+  secondWindow,
+  thirdWindow,
+  forthWindow,
+};
 
 function closeAllWindows() {
   if (process.platform !== 'darwin') {
@@ -38,147 +93,94 @@ function closeAllWindows() {
   }
 }
 
-function closeAllOnly() {
+function closeOnly() {
   mainWindow.close();
-  secondWindow.close();
-  thirdWindow.close();
-  forthWindow.close();
+  wins.secondWindow.close();
+  wins.thirdWindow.close();
+  wins.forthWindow.close();
 }
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1600,
-    height: 800,
+    width,
+    height,
     frame: true,
     show: false,
     title: 'bonana image viewer',
-    icon: path.join(__dirname, '/assets/icons/64x64.png'),
+    icon: path.join(__dirname, 'assets/icons/64x64.png'),
     webPreferences,
   });
-
-  // mainWindow.webContents.openDevTools();
-  // mainWindow.webContents.on('devtools-opened', () => {
-  //   mainWindow.webContents.closeDevTools();
-  // });
-
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     // mainWindow.webContents.openDevTools();
   });
 
-  const startUrl = url.format({
-    pathname: path.join(__dirname, '/index.html'),
-    protocol: 'file:',
-    slashes: true,
-  });
+  const startUrl =
+    process.env.ELECTRON_START_URL ||
+    url.format({
+      pathname: path.join(__dirname, 'index.html'),
+      protocol: 'file:',
+      slashes: true,
+    });
 
   mainWindow.loadURL(startUrl);
 
   mainWindow.on('minimize', () => {
     mainWindow.hide();
-    // secondWindow.close();
-    // thirdWindow.close();
-    // forthWindow.close();
   });
 
-  // mainWindow.on('closed', closeAllWindows);
-  mainWindow.on('closed', () => (mainWindow = null));
-  // mainWindow.on('closed', () => {
-  //   const tray = new Tray(iconPath);
-  //   tray.on('click', () => initWindows);
-  // });
+  mainWindow.on('close', e => {
+    e.preventDefault();
+    mainWindow.hide();
+  });
+
+  mainWindow.on('closed', closeAllWindows);
 }
 
-function createSecondWindow() {
-  secondWindow = new BrowserWindow({
-    title: 'electron-props',
+function createAdditionalWindow(ref) {
+  wins[ref] = new BrowserWindow({
+    title: 'background thread',
     show: false,
     webPreferences,
   });
 
-  // secondWindow.show();
   const startUrl = url.format({
-    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
+    pathname: path.join(__dirname, 'static/js/secondWindow/index.html'),
     protocol: 'file:',
     slashes: true,
   });
 
-  secondWindow.loadURL(startUrl);
-  // secondWindow.on('closed', closeAllWindows);
-}
+  wins[ref].on('closed', closeAllWindows);
 
-function createThirdWindow() {
-  thirdWindow = new BrowserWindow({
-    title: 'electron-props',
-    show: false,
-    webPreferences,
-  });
-
-  // thirdWindow.show();
-  const startUrl = url.format({
-    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
-    protocol: 'file:',
-    slashes: true,
-  });
-
-  thirdWindow.loadURL(startUrl);
-  // thirdWindow.on('closed', closeAllWindows);
-}
-
-function createForthWindow() {
-  forthWindow = new BrowserWindow({
-    title: 'electron-props',
-    show: false,
-    webPreferences,
-  });
-
-  // forthWindow.show();
-  const startUrl = url.format({
-    pathname: path.join(__dirname, '/static/js/secondWindow/index.html'),
-    protocol: 'file:',
-    slashes: false,
-  });
-
-  forthWindow.loadURL(startUrl);
-  // forthWindow.on('closed', closeAllWindows);
+  wins[ref].loadURL(startUrl);
 }
 
 function initWindows() {
-  createSecondWindow();
-  createThirdWindow();
-  createForthWindow();
+  createAdditionalWindow('secondWindow');
+  createAdditionalWindow('thirdWindow');
+  createAdditionalWindow('forthWindow');
   createWindow();
 }
-let tray;
+
 function initTray() {
   tray = new Tray(iconPath);
   tray.on('click', () => {
-    if (!mainWindow) {
-      // createWindow();
-      initWindows();
-      mainWindow.hide();
-      return;
-    }
-
-    if (mainWindow.isVisible()) {
-      // closeAllOnly();
-      mainWindow.hide();
-      return;
-    }
-    mainWindow.show();
+    if (mainWindow.isVisible()) mainWindow.hide();
+    else mainWindow.show();
   });
 }
 
 app.on('ready', () => {
+  ({
+    width: maxWidth,
+    height: maxHeight,
+  } = electron.screen.getPrimaryDisplay().workAreaSize);
+
   initWindows();
   initTray();
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    // app.quit();
-  }
-});
+app.on('window-all-closed', closeAllWindows);
 
 // app.on('active', () => {
 //   if (mainWindow === null) {
@@ -186,71 +188,114 @@ app.on('window-all-closed', () => {
 //   }
 // });
 
+function parseArgumets(args) {
+  const argvs = args.slice(isDev ? 2 : 1);
+  const cli = parseArgs({ text: cliText, argv: argvs }, cliConf);
+  if (cli.flags.v || cli.flags.h) return closeAllWindows();
+  return cli.flags;
+}
+
 app.on('second-instance', (event, commandLine, workingDirectory) => {
   if (!mainWindow) initWindows();
-
-  mainWindow.webContents.send('asynchronous-message', {
-    type: 'SEND_ARGUMENTS',
-    data: commandLine,
-  });
+  argv = commandLine;
+  const args = parseArgumets(argv);
+  if (!args) return;
+  if (args._.length) {
+    mainWindow.webContents.send('asynchronous-message', {
+      type: 'SEND_ARGUMENTS',
+      data: args,
+    });
+  }
 
   if (mainWindow.isMinimized()) mainWindow.restore();
   if (!mainWindow.isVisible()) mainWindow.show();
   mainWindow.focus();
 });
 
+function updateConfigs({ confs }) {
+  conf.set('default', confs);
+}
+
 ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
   switch (type) {
-    case 'GET_PROPS': {
-      secondWindow.webContents.send('asynchronous-message', arg);
+    case 'LOG':
+      console.log(arg);
       break;
-    }
 
-    case 'SEND_PROPS': {
+    case 'GET_PROPS':
+      wins.secondWindow.webContents.send('asynchronous-message', arg);
+      break;
+
+    case 'SEND_PROPS':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_RESIZED': {
-      secondWindow.webContents.send('asynchronous-message', arg);
+    case 'GET_RESIZED':
+      wins.secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_RESIZED': {
+    case 'SEND_RESIZED':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_COLOR': {
-      secondWindow.webContents.send('asynchronous-message', arg);
+    case 'GET_COLOR':
+      wins.secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_COLOR': {
+    case 'SEND_COLOR':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_BLURED': {
-      thirdWindow.webContents.send('asynchronous-message', arg);
+    case 'GET_BLURED':
+      wins.thirdWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_BLURED': {
+    case 'SEND_BLURED':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'GET_FILELIST': {
-      forthWindow.webContents.send('asynchronous-message', arg);
+    case 'GET_EXIF':
+      wins.secondWindow.webContents.send('asynchronous-message', arg);
       break;
-    }
 
-    case 'SEND_FILELIST': {
+    case 'SEND_EXIF':
       mainWindow.webContents.send('asynchronous-message', arg);
       break;
+
+    case 'GET_FILELIST':
+      wins.forthWindow.webContents.send('asynchronous-message', arg);
+      break;
+
+    case 'SEND_FILELIST':
+      mainWindow.webContents.send('asynchronous-message', arg);
+      break;
+
+    case 'GET_CONFIGS': {
+      const message = { type: 'CONFIGS', data: conf.get('default') };
+      mainWindow.webContents.send('asynchronous-message', message);
+      break;
     }
+
+    case 'GET_ARGUMENTS': {
+      const message = { type: 'SEND_ARGUMENTS', data: parseArgumets(argv) };
+      if (!message.data) return;
+      mainWindow.webContents.send('asynchronous-message', message);
+      break;
+    }
+
+    case 'UPDATE_CONFIGS':
+      updateConfigs(data);
+      break;
+
+    case 'WRITE_TO_CLIPBOARD':
+      clipboard.writeText(data.text.toString());
+      break;
+
+    case 'WRITE_IMAGE_TO_CLIPBOARD':
+      clipboard.writeImage(data.path, clipboard);
+      break;
+
     default:
       break;
   }

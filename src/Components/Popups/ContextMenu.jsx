@@ -22,14 +22,14 @@ class Info extends Component {
     togglePopup('contextMenu');
   };
 
-  // eslint-disable-next-line react/destructuring-assignment
   onDelete = () => this.handleClick(this.props.onDelete);
 
   onCopy = () => this.handleClick(this.copyToClipboard);
 
+  onContextMenu = () => this.handleClick(() => this.props.togglePopup('info'));
+
   render() {
     const { position } = this.props;
-    const { onDelete } = this.props;
     const { x, y } = position;
     const currentFile = getCurrentFile();
     if (!currentFile) return null;
@@ -43,7 +43,9 @@ class Info extends Component {
         <div onClick={this.onDelete} className="context-menu-item">
           Delete
         </div>
-        <div className="context-menu-item">Properties (i)</div>
+        <div onClick={this.onContextMenu} className="context-menu-item">
+          Properties (i)
+        </div>
       </div>
     );
   }

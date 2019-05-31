@@ -1,12 +1,5 @@
 import * as message from '../constants/asyncMessages';
-import {
-  resizeImage,
-  getFileProps,
-  getAverageColor,
-  blurImage,
-  getDirectory,
-  getExif,
-} from './utils';
+import { resizeImage, getFileProps, blurImage, getDirectory, getExif } from './utils';
 
 const { ipcRenderer } = window.electron;
 
@@ -33,14 +26,6 @@ ipcRenderer.on('asynchronous-message', async (event, arg) => {
       const base64 = await blurImage({ width, height, fullPath });
       const newMessage = { fullPath, base64 };
       ipcRenderer.send('asynchronous-message', message.sendBlured(newMessage));
-      break;
-    }
-
-    case 'GET_COLOR': {
-      const { buffer, fullPath } = data;
-      const color = await getAverageColor(buffer);
-      const newMessage = { fullPath, color };
-      ipcRenderer.send('asynchronous-message', message.sendColor(newMessage));
       break;
     }
 

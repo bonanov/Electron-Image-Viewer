@@ -466,6 +466,12 @@ body {
 
 .info-item_container {
   margin-left: 10px;
+  height: calc(100% - 30px);
+  
+}
+
+.exif-info .info-item_container {
+  overflow-y: auto;
 }
 
 .info-title {
@@ -502,11 +508,11 @@ body {
 }
 
 .info-item:hover, .exif-info_title:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 .info-item:active, .exif-info_title:active {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 
@@ -517,7 +523,10 @@ body {
 }
 
 .exif-info {
-  overflow-y: auto
+  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-title .control {
@@ -562,4 +571,14 @@ body {
 
 .popup {
   box-shadow: 0px 10px 20px 0 hsla(0, 0%, 0%, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background:  hsla(206, 3%, 43%, 0.5);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 4px;
 }

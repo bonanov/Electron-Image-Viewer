@@ -219,6 +219,10 @@ function updateConfigs({ confs }) {
 ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
   switch (type) {
+    case 'LOG':
+      console.log(arg);
+      break;
+
     case 'GET_PROPS':
       wins.secondWindow.webContents.send('asynchronous-message', arg);
       break;

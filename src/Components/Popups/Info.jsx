@@ -5,6 +5,8 @@ import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
+const { Scrollbars } = window.rcs;
+
 const { ipcRenderer } = window.electron;
 const prettyBytes = window.prettyBytes;
 const dates = window.dates;
@@ -103,7 +105,14 @@ class Info extends Component {
           </span>
         </div>
         <div className="info-item_container">
+          {/* <Scrollbars
+            style={{ height: '100%' }}
+            autoHeight
+            autoHeightMin="50px"
+            autoHeightMax="100%"
+          > */}
           {infos.map((entry, index) => this.getInfoItem(entry.keys, entry.vals, index))}
+          {/* </Scrollbars> */}
         </div>
       </div>
     );

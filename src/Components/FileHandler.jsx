@@ -51,6 +51,7 @@ class FileHandler extends Component {
           return this.setBlur(data);
 
         case 'SEND_EXIF':
+          console.log(data);
           return this.setExif(data);
 
         default:
