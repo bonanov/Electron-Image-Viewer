@@ -5,8 +5,6 @@ import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
-const { Scrollbars } = window.rcs;
-
 const { ipcRenderer } = window.electron;
 const prettyBytes = window.prettyBytes;
 const dates = window.dates;
