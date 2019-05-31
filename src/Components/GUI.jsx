@@ -7,7 +7,12 @@ import ControlPanel from './ControlPanel';
 import ImagePreloader from './ImagePreloader';
 import Popups from './Popups/Popups';
 import * as message from '../constants/asyncMessages';
-import { HIDE_TIMEOUT, CONTROL_PANEL_SEL, IMAGE_CONTAINER_SEL } from '../constants/base';
+import {
+  HIDE_TIMEOUT,
+  CONTROL_PANEL_SEL,
+  IMAGE_CONTAINER_SEL,
+  PRELOAD_N_IMAGES,
+} from '../constants/base';
 import { toggleFullscreen, mod } from '../utils/base.js';
 import {
   getCurrentFile,
@@ -85,10 +90,10 @@ class GUI extends Component {
     if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
 
     if (code === 'Home') return updatePosition(0);
-    if (key === '+') return this.handleZoom({ delta: +1 });
-    if (key === '-') return this.handleZoom({ delta: -1 });
-    if (code === 'End') return updatePosition(fileList.length - 1);
-    if (code === 'KeyF') return toggleFullscreen();
+    if (!ctrlKey && key === '+') return this.handleZoom({ delta: +1 });
+    if (!ctrlKey && key === '-') return this.handleZoom({ delta: -1 });
+    if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
+    if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
     if (key === 'F11') {
@@ -96,7 +101,13 @@ class GUI extends Component {
       toggleFullscreen();
       return;
     }
-    if (code === 'KeyS') {
+
+    if (!ctrlKey && code === 'KeyS') {
+      this.handleSlideShowToggle();
+      return;
+    }
+
+    if (!ctrlKey && code === 'KeyR') {
       this.handlePanelsHide();
       onShuffle();
     }
@@ -187,9 +198,9 @@ class GUI extends Component {
   };
 
   handleMouseMove = e => {
-    e.preventDefault();
     const { moving } = this.state;
     const { target } = e;
+    if (target.tagName !== 'INPUT') e.preventDefault();
     this.handlePanelsHide(target);
 
     if (!moving) return;
@@ -463,10 +474,13 @@ class GUI extends Component {
   preloader = () => {
     const { viewModes, fileSystem, config } = this.props;
     const { backgroundColor, preloadImages } = config;
-    const { bgColor } = viewModes;
+    const { bgColor, slideShow } = viewModes;
     const { currentPosition, fileList } = fileSystem;
+    const imagesToPreload = slideShow ? PRELOAD_N_IMAGES + 1 : PRELOAD_N_IMAGES;
     return (
       <ImagePreloader
+        imagesToPreload={imagesToPreload}
+        onlyPreloadNext={slideShow}
         shouldPreload={preloadImages}
         bgColor={bgColor}
         backgroundColor={backgroundColor}

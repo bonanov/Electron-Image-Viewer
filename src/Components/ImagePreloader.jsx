@@ -1,15 +1,21 @@
 import React, { Component } from 'react';
 import { getClosestNFiles } from '../utils/getValueFromStore';
-import { PRELOAD_N_IMAGES } from '../constants/base';
 
 class ImagePreloader extends Component {
   state = {};
 
   render() {
-    const { fileList, bgColor, backgroundColor, shouldPreload } = this.props;
+    const {
+      fileList,
+      bgColor,
+      backgroundColor,
+      shouldPreload,
+      onlyPreloadNext,
+      imagesToPreload,
+    } = this.props;
     if (fileList.length < 1) return null;
     const color = backgroundColor ? bgColor : null;
-    const preloadList = getClosestNFiles(PRELOAD_N_IMAGES);
+    const preloadList = getClosestNFiles(imagesToPreload, onlyPreloadNext);
     if (preloadList.length < 1) return null;
 
     return (

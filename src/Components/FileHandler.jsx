@@ -75,6 +75,7 @@ class FileHandler extends Component {
     const { updateCurrentBlob } = this.props;
     const { config: c } = this.props;
     const currentFile = getCurrentFile();
+    const { slideShow } = getViewModes();
     const { fileName } = currentFile;
     document.title = fileName;
     const { type } = currentFile;
@@ -83,7 +84,9 @@ class FileHandler extends Component {
     updateCurrentBlob('');
     if (c.backgroundBlur) this.handleBlur();
     if (c.backgroundColor) this.handleColor();
-    if (c.hqResize && type !== 'gif') this.handleResize();
+    if (c.hqResize && (c.slideTimeOut > 3000 || !slideShow) && type !== 'gif') {
+      this.handleResize();
+    }
     this.handleScale();
   };
 

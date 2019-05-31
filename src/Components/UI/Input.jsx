@@ -40,7 +40,7 @@ class Input extends Component {
     const { min, max } = this.state;
 
     let newValue = Math.min(Math.max(min, value), max);
-    newValue = parseFloat(newValue.toFixed(2));
+    newValue = parseFloat(newValue.toFixed(3));
 
     this.setState({ value: newValue });
     if (onChange) onChange(newValue);
@@ -66,7 +66,6 @@ class Input extends Component {
       >
         <input
           step={step}
-          autoFocus
           min={min}
           max={max}
           type="number"

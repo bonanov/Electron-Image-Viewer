@@ -39,11 +39,11 @@ export const getCurrentFilePath = () => {
   return fullPath;
 };
 
-export const getClosestNFiles = n => {
+export const getClosestNFiles = (n, onlyNext = false) => {
   const { currentPosition } = getFileSystem();
   const array = [];
   for (let i = 1; i < n + 1; i++) {
-    array.push(getFileAtNPosition(currentPosition - i));
+    if (!onlyNext) array.push(getFileAtNPosition(currentPosition - i));
     array.push(getFileAtNPosition(currentPosition + i));
   }
   return array;
