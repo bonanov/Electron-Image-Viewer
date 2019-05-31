@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import Input from './UI/Input';
+
+const Tooltip = window.rcTooltip;
 
 class ControlPanel extends Component {
   state = {
@@ -36,13 +39,32 @@ class ControlPanel extends Component {
     );
   };
 
-  getSlideShowIcon = () => {
-    const { slideShow, onToggleSlideShow } = this.props;
-    const classes = `control slideshow-mode ${slideShow ? 'slideshow-enabled' : ''}`;
+  getSlideShowIcon = slideShow => {
+    const { onToggleSlideShow, onSlideShowTimeoutChange } = this.props;
+    const { slideShowTimeOut } = this.props;
+    const classes = `control slideshow-mode unwheel ${
+      slideShow ? 'slideshow-enabled' : ''
+    }`;
     return (
-      <span title="Slideshow" onClick={onToggleSlideShow} className={classes}>
-        <i className="fa fa-film" />
-      </span>
+      <Tooltip
+        destroyTooltipOnHide
+        placement="top"
+        trigger={['hover']}
+        overlay={
+          <Input
+            step={0.25}
+            min={0.25}
+            max={120}
+            initialValue={slideShowTimeOut / 1000}
+            onChange={onSlideShowTimeoutChange}
+          />
+        }
+        overlayClassName="tooltip-overlay"
+      >
+        <span title="Slideshow" onClick={onToggleSlideShow} className={classes}>
+          <i className="fa fa-film" />
+        </span>
+      </Tooltip>
     );
   };
 
@@ -92,13 +114,13 @@ class ControlPanel extends Component {
 
   render() {
     const { onShiftImage } = this.props;
-    const { hidden } = this.props;
+    const { hidden, slideShow } = this.props;
     const hiddenClasses = hidden ? 'panel-hidden' : 'panel-visible';
     return (
       <div className={`control-panel-container control-panel-bottom ${hiddenClasses}`}>
         <div className="controls">
           {this.getTrashIcon()}
-          {this.getSlideShowIcon()}
+          {this.getSlideShowIcon(slideShow)}
           {this.getRandomIcon()}
           {this.getZoomIcon()}
           <span

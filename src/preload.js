@@ -9,6 +9,7 @@ window.prettyBytes = require('pretty-bytes');
 window.dates = require('date-and-time');
 window.timeAgo = require('javascript-time-ago');
 window.timeEn = require('javascript-time-ago/locale/en');
+window.rcTooltip = require('rc-tooltip');
 // window.stackblur = require('stackblur');
 // window.fac = require('fast-average-color');
 // window.hash = require('hash.js');

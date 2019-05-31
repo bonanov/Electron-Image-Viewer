@@ -6,6 +6,7 @@ import reducer, { store } from './reducers/index';
 import './index.css';
 import App from './App';
 import '../node_modules/font-awesome/css/font-awesome.min.css';
+import '../node_modules/rc-tooltip/assets/bootstrap.css';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(

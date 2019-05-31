@@ -6,6 +6,7 @@ const initialState = {
   uiHidden: false,
   bgColor: '#222',
   scale: 1,
+  slideShow: false,
   imagePosition: {
     x: 0,
     y: 0,
@@ -13,9 +14,16 @@ const initialState = {
 };
 
 const viewModes = (state = initialState, action) => {
-  if (action.type === types.UPDATE_IMAGE_POSITION) {
-    return { ...state, imagePosition: { ...action.payload } };
+  if (action.type === types.TOGGLE_SLIDESHOW) {
+    return { ...state, slideShow: !state.slideShow };
   }
+
+  if (action.type === types.DISABLE_SLIDESHOW) {
+    return { ...state, slideShow: false };
+  }
+
+  if (action.type === types.UPDATE_IMAGE_POSITION)
+    return { ...state, imagePosition: { ...action.payload } };
 
   if (action.type === types.RESET_IMAGE_POSITION) {
     return { ...state, imagePosition: { x: 0, y: 0 } };

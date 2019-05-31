@@ -8,6 +8,7 @@ const initialState = {
   backgroundBlur: true,
   backgroundColor: false,
   hqResize: true,
+  slideTimeOut: 1000,
 };
 
 const config = (state = initialState, action) => {

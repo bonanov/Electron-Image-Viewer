@@ -44,11 +44,13 @@ const defaultConfig = {
   imagesToPreload: 1,
   backgroundBlur: true,
   hqResize: true,
+  slideTimeOut: 1000,
 };
 
 const config = conf.get('default');
 if (!config) conf.set('default', defaultConfig);
 if (conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+if (conf.get('default.slideTimeOut')) conf.set('default.slideTimeOut', 1000);
 
 const preload = path.join(__dirname, 'preload.js');
 

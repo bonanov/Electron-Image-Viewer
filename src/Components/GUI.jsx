@@ -39,6 +39,7 @@ class GUI extends Component {
     this.hideTimer = null;
     this.wheelTimer = null;
     this.undoRemoveTime = null;
+    this.slideShowTimer = null;
     this.state = {
       moving: false,
     };
@@ -77,6 +78,8 @@ class GUI extends Component {
     const { updatePosition, onShuffle } = this.props;
     const { fileList } = getFileSystem();
     const { code, ctrlKey, key } = e;
+
+    if (document.activeElement.tagName === 'INPUT') return;
 
     if (code === 'ArrowRight' || code === 'Space') return this.handleShiftImage(1);
     if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
@@ -229,7 +232,10 @@ class GUI extends Component {
     }
 
     const unclosableTargets = () =>
-      target.closest(CONTROL_PANEL_SEL) || target.closest('.settings_container');
+      target.closest(CONTROL_PANEL_SEL) ||
+      target.closest('.settings_container') ||
+      target.closest('.unhide') ||
+      target.closest('.rc-tooltip-inner');
 
     if (target && unclosableTargets()) return;
     this.hideTimer = setTimeout(hideUi, HIDE_TIMEOUT);
@@ -240,6 +246,9 @@ class GUI extends Component {
     const { clientX, clientY, target } = e;
 
     if (target.closest('.popup')) return;
+
+    if (target.closest('.unwheel')) return;
+    if (target.closest('.rc-tooltip-inner')) return;
 
     if (target.closest('.control-panel-bottom')) return this.handleShiftImage(delta);
 
@@ -339,13 +348,7 @@ class GUI extends Component {
 
   handleShiftImage = order => {
     const { fileSystem } = this.props;
-    const {
-      updatePosition,
-      resetImagePosition,
-      updateFileList,
-      setZoomMode,
-      updateScale,
-    } = this.props;
+    const { updatePosition, resetImagePosition, setZoomMode, updateScale } = this.props;
     const { fileList, currentPosition } = fileSystem;
     const { scale, zoomMode } = getViewModes();
     if (this.updating) return;
@@ -360,7 +363,7 @@ class GUI extends Component {
 
     const isExist = fs.existsSync(newFile.fullPath);
     if (!isExist) {
-      const newList = removeFileFromList(newFile.fullPath);
+      removeFileFromList(newFile.fullPath);
     } else {
       updatePosition(newPosition);
     }
@@ -390,8 +393,42 @@ class GUI extends Component {
     // ipcRenderer.send('asynchronous-message', message.getExif(fullPath));
   };
 
+  handleSlideShowToggle = () => {
+    const { toggleSlideShow } = this.props;
+    const { viewModes } = this.props;
+    const { slideShow } = viewModes;
+    if (!slideShow) this.handleSlideShow();
+    toggleSlideShow();
+  };
+
+  handleSlideShow = () => {
+    const { slideTimeOut } = this.props.config;
+    this.handleShiftImage(1);
+    this.slideShowTimer = setTimeout(() => {
+      const { slideShow } = this.props.viewModes;
+      if (!slideShow) {
+        clearTimeout(this.slideShowTimer);
+        return;
+      }
+
+      this.handleSlideShow();
+    }, slideTimeOut);
+  };
+
+  handleSlideShowTimeOutChange = value => {
+    const { updateConfig } = this.props;
+    // clearTimeout(this.slideShowTimer);
+    // this.handleSlideShow();
+
+    const confItem = { slideTimeOut: value * 1000 };
+
+    updateConfig(confItem);
+    ipcRenderer.send('asynchronous-message', message.updateConfigs(confItem));
+  };
+
   mainGui = () => {
-    const { viewModes, fileSystem } = this.props;
+    const { viewModes, fileSystem, config } = this.props;
+    const { slideShow } = viewModes;
     const { currentPosition, fileList } = fileSystem;
     const { onShuffle, imageEl } = this.props;
     const currentFile = getCurrentFile();
@@ -405,14 +442,18 @@ class GUI extends Component {
           onInfo={this.handleInfo}
         />
         <ControlPanel
+          slideShow={slideShow}
+          slideShowTimeOut={config.slideTimeOut}
+          zoomMode={viewModes.zoomMode}
+          randomMode={viewModes.shuffle}
+          hidden={viewModes.uiHidden}
           onToggleFullscreen={toggleFullscreen}
+          onToggleSlideShow={this.handleSlideShowToggle}
+          onSlideShowTimeoutChange={this.handleSlideShowTimeOutChange}
           onFileDelete={this.handleFileDelete}
           onSettingsClick={this.handleSettingsOpen}
           onShiftImage={this.handleShiftImage}
           onZoomChange={this.handleZoomToggle}
-          zoomMode={viewModes.zoomMode}
-          randomMode={viewModes.shuffle}
-          hidden={viewModes.uiHidden}
           onToggleShuffle={onShuffle}
         />
       </React.Fragment>
@@ -454,6 +495,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+  toggleSlideShow: () => ({ type: types.TOGGLE_SLIDESHOW }),
+  updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
   togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
   setContextMenuAt: payload => ({ type: types.SET_CONTEXT_MENU_AT, payload }),
