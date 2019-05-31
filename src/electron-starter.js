@@ -87,17 +87,18 @@ const wins = {
   forthWindow,
 };
 
-function closeAllWindows() {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-}
-
 function closeOnly() {
   mainWindow.close();
   wins.secondWindow.close();
   wins.thirdWindow.close();
   wins.forthWindow.close();
+}
+
+function closeAllWindows() {
+  // closeOnly();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 }
 
 function createWindow() {
@@ -128,6 +129,9 @@ function createWindow() {
   mainWindow.on('minimize', () => {
     mainWindow.hide();
   });
+
+  mainWindow.on('show', initContextMenu);
+  mainWindow.on('hide', initContextMenu);
 
   mainWindow.on('close', e => {
     e.preventDefault();
@@ -162,13 +166,34 @@ function initWindows() {
   createWindow();
 }
 
+function toggleWindow() {
+  if (mainWindow.isVisible()) mainWindow.hide();
+  else mainWindow.show();
+}
+
+const trayMenu = () => [
+  {
+    label: mainWindow.isVisible() ? 'Hide' : 'Open',
+    type: 'normal',
+    click() {
+      toggleWindow();
+    },
+  },
+  {
+    label: 'Quit',
+    click() {
+      closeAllWindows();
+    },
+  },
+];
+
 function initTray() {
   tray = new Tray(iconPath);
-  tray.on('click', () => {
-    if (mainWindow.isVisible()) mainWindow.hide();
-    else mainWindow.show();
-  });
+  tray.on('click', toggleWindow);
+  initContextMenu();
 }
+
+const initContextMenu = () => tray.setContextMenu(Menu.buildFromTemplate(trayMenu()));
 
 app.on('ready', () => {
   ({
@@ -180,7 +205,18 @@ app.on('ready', () => {
   initTray();
 });
 
-app.on('window-all-closed', closeAllWindows);
+app.on('will-quit', function() {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('window-all-closed', function() {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  mainWindow.removeAllListeners('close');
+  app.quit();
+});
 
 // app.on('active', () => {
 //   if (mainWindow === null) {
@@ -213,7 +249,8 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 function updateConfigs({ confs }) {
-  conf.set('default', confs);
+  const curConf = conf.get('default');
+  conf.set('default', { ...curConf, ...confs });
 }
 
 ipcMain.on('asynchronous-message', (event, arg) => {

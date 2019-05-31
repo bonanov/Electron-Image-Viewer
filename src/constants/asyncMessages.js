@@ -110,17 +110,3 @@ export const sendExif = ({ exifData, fullPath }) => ({
     fullPath,
   },
 });
-
-export const writeToClipboard = text => ({
-  type: 'WRITE_TO_CLIPBOARD',
-  data: {
-    text,
-  },
-});
-
-export const writeImageToClipboard = path => ({
-  type: 'WRITE_IMAGE_TO_CLIPBOARD',
-  data: {
-    path,
-  },
-});

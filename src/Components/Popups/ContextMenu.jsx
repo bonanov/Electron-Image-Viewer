@@ -5,14 +5,12 @@ import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
-const { ipcRenderer } = window.electron;
+const { ipcRenderer, clipboard } = window.electron;
 
 class Info extends Component {
   copyToClipboard = () => {
-    const { togglePopup } = this.props;
     const { fullPath } = getCurrentFile();
-    ipcRenderer.send('asynchronous-message', message.writeImageToClipboard(fullPath));
-    // togglePopup('contextMenu');
+    clipboard.writeImage(fullPath);
   };
 
   handleClick = callback => {

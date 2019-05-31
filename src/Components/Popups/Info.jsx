@@ -5,7 +5,7 @@ import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
-const { ipcRenderer } = window.electron;
+const { ipcRenderer, clipboard } = window.electron;
 const prettyBytes = window.prettyBytes;
 const dates = window.dates;
 const TimeAgo = window.timeAgo;
@@ -14,7 +14,7 @@ TimeAgo.addLocale(en);
 
 class Info extends Component {
   copyToClipboard = value => {
-    ipcRenderer.send('asynchronous-message', message.writeToClipboard(value));
+    clipboard.writeText(value.toString());
   };
 
   getInfoItem = (name, value, index, classes) => (
