@@ -6,14 +6,14 @@ class Animate extends Component {
   };
 
   componentDidMount() {
-    // setTimeout(() => this.setState({ visible: true }), 1);
-    this.setState({ visible: true });
+    setTimeout(() => this.setState({ visible: true }), 1);
   }
 
   render() {
-    const { children, key_ } = this.props;
+    const { children, key_, customClass } = this.props;
     const { visible } = this.state;
-    const classes = `anim ${visible ? 'anim-visible' : 'anim-hidden'}`;
+    const classes = `anim ${visible ? 'anim-visible' : 'anim-hidden'} ${customClass ||
+      ''}`;
     return <aside className={classes}>{children}</aside>;
   }
 }

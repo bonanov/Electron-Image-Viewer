@@ -405,7 +405,7 @@ class GUI extends Component {
           onInfo={this.handleInfo}
         />
         <ControlPanel
-          onToggleFullscreen={() => toggleFullscreen()}
+          onToggleFullscreen={toggleFullscreen}
           onFileDelete={this.handleFileDelete}
           onSettingsClick={this.handleSettingsOpen}
           onShiftImage={this.handleShiftImage}

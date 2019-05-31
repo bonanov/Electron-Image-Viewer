@@ -17,15 +17,21 @@ class Popups extends Component {
 
   render() {
     const { popups, trash } = this.props;
-    const { onUndoRemove, onDelete } = this.props;
+    const { onUndoRemove, onDelete, onPathOpen } = this.props;
     const { undoRemove, settings, info, contextMenu } = popups;
     const { contextMenuPos } = popups;
     return (
       <aside className="popups-container">
         {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
         {settings && <Settings onClose={() => this.handlePopupClose('settings')} />}
-        {info && <Info />}
-        {contextMenu && <ContextMenu onDelete={onDelete} position={contextMenuPos} />}
+        <Info visible={info} />
+        {contextMenu && (
+          <ContextMenu
+            visible={contextMenu}
+            onDelete={onDelete}
+            position={contextMenuPos}
+          />
+        )}
       </aside>
     );
   }

@@ -5,7 +5,7 @@ import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
-const { ipcRenderer, clipboard } = window.electron;
+const { ipcRenderer, clipboard, shell } = window.electron;
 
 class Info extends Component {
   copyToClipboard = () => {
@@ -18,6 +18,13 @@ class Info extends Component {
 
     if (callback) callback();
     togglePopup('contextMenu');
+  };
+
+  onPathOpen = () => {
+    const { fullPath } = getCurrentFile();
+    this.handleClick(() => {
+      shell.showItemInFolder(fullPath);
+    });
   };
 
   onDelete = () => this.handleClick(this.props.onDelete);
@@ -34,15 +41,17 @@ class Info extends Component {
 
     return (
       <div style={{ left: x, top: y }} className="popup context-menu">
-        <div className="context-menu-item">Open in file manager (o)</div>
-        <div onClick={this.onCopy} className="context-menu-item">
-          Copy image to clipboard (ctrl+c)
+        <div onClick={this.onPathOpen} className="context-menu-item">
+          Open in a file manager
         </div>
-        <div onClick={this.onDelete} className="context-menu-item">
-          Delete
+        <div onClick={this.onCopy} className="context-menu-item">
+          Copy image to clipboard
         </div>
         <div onClick={this.onContextMenu} className="context-menu-item">
-          Properties (i)
+          Properties
+        </div>
+        <div onClick={this.onDelete} className="context-menu-item context-menu-delete">
+          Delete
         </div>
       </div>
     );

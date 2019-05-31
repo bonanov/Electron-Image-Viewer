@@ -127,9 +127,10 @@ class Info extends Component {
 
     const exif = fileProps && fileProps.exifData;
 
-    const { config, onClose } = this.props;
+    const { config, visible, onClose } = this.props;
+    const classes = `popup info_container ${visible ? 'info_container_visible' : ''}`;
     return (
-      <div className="popup info_container">
+      <div className={classes}>
         {this.getBasicInfo(currentFile)}
         {exif && this.getExifInfo(currentFile)}
       </div>
