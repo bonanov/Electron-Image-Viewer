@@ -17,7 +17,7 @@ import {
   getFileByPath,
   removeFileFromList,
 } from '../utils/getValueFromStore';
-import { parseArguments, mod } from '../utils/base';
+import { parseArguments, formatPath } from '../utils/base';
 
 const { ipcRenderer } = window.electron;
 
@@ -68,7 +68,6 @@ class FSInterface extends Component {
     if (!args._) return;
 
     const parsedArgs = await parseArguments(args._);
-    console.log(parsedArgs);
     if (!parsedArgs || !parsedArgs.list.length) return;
 
     if (args.omit || parsedArgs.list.length > 1) parsedArgs.omitDir = true;
@@ -203,6 +202,7 @@ class FSInterface extends Component {
   };
 
   render() {
+    const { cropMode } = this.props.viewModes;
     const currentFile = getCurrentFile();
     return (
       <React.Fragment>
@@ -211,11 +211,14 @@ class FSInterface extends Component {
           onDrop={this.handleFiles}
           onLinkDrop={this.handleLinkDrop}
         />
+
         <FileHandler
           onRef={ref => (this.imageEl = ref)}
           onFileError={this.handleFileError}
         />
+
         <GUI
+          handleCrop={this.handleCrop}
           imageEl={this.imageEl}
           onShuffle={this.handleToggleShuffle}
           FSInterface={this}

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { getClosestNFiles } from '../utils/getValueFromStore';
+import { formatPath } from '../utils/base';
 
 class ImagePreloader extends Component {
   state = {};
@@ -27,7 +28,7 @@ class ImagePreloader extends Component {
                 key={index}
                 alt=""
                 className="preload-image"
-                src={`file:///${file.fullPath}`}
+                src={formatPath(file.fullPath)}
               />
             ))}
 

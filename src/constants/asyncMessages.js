@@ -110,3 +110,10 @@ export const sendExif = ({ exifData, fullPath }) => ({
     fullPath,
   },
 });
+
+export const writeImageToClipboard = ({ base64 }) => ({
+  type: 'WRITE_IMAGE_TO_CLIPBOARD',
+  data: {
+    base64,
+  },
+});

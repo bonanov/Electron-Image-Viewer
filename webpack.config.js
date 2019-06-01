@@ -1,10 +1,10 @@
 // // eslint-disable-next-line import/no-extraneous-dependencies
-const path = require('path');
+// const path = require('path');
 // const sharp = require('sharp');
 // const WorkerPlugin = require('worker-plugin');
 
 module.exports = {
-  externals: ['sharp', 'gm', 'fs', 'process', 'exif', 'setImmediate'],
+  externals: ['sharp', 'gm', 'fs', 'path', 'process', 'exif', 'setImmediate'],
   target: 'node',
   resolve: {
     extensions: ['.js', '.node'],

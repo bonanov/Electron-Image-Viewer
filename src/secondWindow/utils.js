@@ -1,7 +1,7 @@
 import sharp from 'sharp';
-
 import gm from 'gm';
 import fs from 'fs';
+import path from 'path';
 import { ExifImage } from 'exif';
 import { FILE_EXT, FILE_TYPES } from '../constants/fileTypes';
 
@@ -93,15 +93,21 @@ const getFileType = name => name.replace(FILE_EXT, '$1');
 
 const formatFileObject = async (fileNameList, dir) => {
   const fileList = [];
+  ipcRenderer.send('asynchronous-message', {
+    type: 'LOG',
+    data: 'got',
+  });
   await fileNameList.forEach(async fileName => {
-    const { size, mtimeMs, atimeMs, ctimeMs } = await fs.statSync(dir + fileName);
+    const { size, mtimeMs, atimeMs, ctimeMs } = await fs.statSync(
+      path.join(dir, fileName)
+    );
     const id = Math.floor(Math.random() * Date.now());
     const type = getFileType(fileName);
     const object = {
-      fileName: fileName.replace(/\?/g, '%3F'),
-      fullPath: (dir + fileName).replace(/\?/g, '%3F'),
+      fileName,
+      fullPath: path.normalize(path.join(dir, fileName)),
       url: '',
-      dir: dir.replace(/\?/g, '%3F'),
+      dir,
       size,
       mtime: mtimeMs,
       atime: atimeMs,
@@ -118,8 +124,9 @@ const formatFileObject = async (fileNameList, dir) => {
 export const getDirectory = async dir => {
   const files = await new Promise(resolve => {
     fs.readdir(dir, async (err, fileList) => {
+      ipcRenderer.send('asynchronous-message', { type: 'LOG', kind: 'err', data: err });
       const list = await formatFileObject(fileList, dir);
-      // ipcRenderer.send('asynchronous-message', { type: 'LOG', data: list });
+      // ipcRenderer.send('asynchronous-message', { type: 'LOG', data: dir });
       const listFiltered = await filterFileList(list);
       // ipcRenderer.send('asynchronous-message', { type: 'LOG', data: listFiltered });
       resolve(listFiltered);

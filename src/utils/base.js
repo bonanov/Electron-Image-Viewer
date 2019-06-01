@@ -2,6 +2,7 @@ import { FILE_TYPES, FILE_EXT } from '../constants/fileTypes';
 
 const { remote } = window.electron;
 const path = remote.require('path');
+const url = remote.require('url');
 const { argv } = remote.process;
 const { NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -49,11 +50,15 @@ export const getFullPath = (a, b) => {
   if (a && b) return `${a}/${b}`;
   return '';
 };
-export const formatPath = a => {
-  if (a) {
-    return `file://${a}`;
+export const formatPath = fpath => {
+  if (!fpath) return '';
+  const splited = fpath.split('');
+  for (let i = 0; i < splited.length; i++) {
+    if (/[^\\/:]/.test(splited[i])) {
+      splited[i] = encodeURIComponent(splited[i]);
+    }
   }
-  return '';
+  return `file://${splited.join('').replace(/file:\/\//, '')}`;
 };
 
 export const formatFullPath = (a, b) => formatPath(getFullPath(a, b));
@@ -106,7 +111,7 @@ const filterFileList = list => {
 
 const getFileType = name => name.replace(FILE_EXT, '$1');
 
-const formatFileObject = async list => {
+export const formatFileObject = async list => {
   const fileList = [];
   await list.forEach(async file => {
     const { mtimeMs, atimeMs, ctimeMs } = await fs.statSync(file);
@@ -114,10 +119,10 @@ const formatFileObject = async list => {
     const type = getFileType(file);
     const { fileName, dirName } = destructFilePath(file);
     const object = {
-      fileName: fileName.replace(/\?/g, '%3F'),
-      fullPath: (dirName + fileName).replace(/\?/g, '%3F'),
+      fileName,
+      fullPath: dirName + fileName,
       url: '',
-      dir: dirName.replace(/\?/g, '%3F'),
+      dir: dirName,
       size: '',
       mtime: mtimeMs,
       atime: atimeMs,
@@ -145,7 +150,6 @@ const getDirectory = async dir => {
 
 const getFiles = arg => {
   const isExist = fs.existsSync(arg);
-  console.log(arg);
   if (!isExist) return;
   // const isDirectory = fs.lstatSync(arg).isDirectory();
   const isFile = fs.lstatSync(arg).isFile();
@@ -192,3 +196,66 @@ export const parseArguments = async args => {
 //   lastModified: file.lastModified,
 //   isUrl: false,
 // };
+
+export const toDataURL = url_ =>
+  fetch(url_)
+    .then(response => response.blob())
+    .then(
+      blob =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+    );
+
+export const pathExist = pathh => fs.existsSync(pathh);
+
+export const destructFilePathFull = filePath => {
+  const fileName = path.basename(filePath, path.extname(filePath));
+  const dirName = path.dirname(filePath);
+  const extension = path.extname(filePath);
+  return {
+    fileName,
+    dirName,
+    extension,
+  };
+};
+
+export const destructToNameSuffix = name => {
+  const preSuffix = name.replace(/^(.*)\s\((\d{1,})\)$/, '$1');
+  const suffix = name.replace(/^(.*)\s\((\d{1,})\)$/, '$2');
+  if (!preSuffix || !suffix) return { preSuffix: '', suffix: NaN, err: 'not found' };
+  return { preSuffix, suffix: parseInt(suffix) };
+};
+
+export const writeDateToDisk = async (outPath, blob) => {
+  if (!blob) return;
+  let currentPath = outPath;
+  const { dirName: dir, fileName: file } = destructFilePathFull(currentPath);
+  currentPath = path.join(dir, file + '.png');
+  const isExist = fs.existsSync(currentPath);
+  if (isExist) {
+    let n = 0;
+    while (fs.existsSync(currentPath)) {
+      const { fileName, dirName, extension } = destructFilePathFull(currentPath);
+      const { preSuffix, suffix, err } = destructToNameSuffix(fileName);
+      if (!err) n = suffix || 0;
+      n++;
+      currentPath = path.join(dirName, `${preSuffix} (${n})${extension}`);
+    }
+  }
+
+  const result = await new Promise(resolve => {
+    const fileReader = new FileReader();
+    fileReader.onload = data => {
+      if (!data) return;
+      const { target } = data;
+      const d = fs.writeFileSync(currentPath, Buffer.from(new Uint8Array(target.result)));
+      if (!d) return resolve(currentPath);
+    };
+    fileReader.readAsArrayBuffer(blob);
+  });
+  return result;
+};

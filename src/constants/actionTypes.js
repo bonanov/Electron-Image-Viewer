@@ -6,6 +6,7 @@ export const ZOOM_FREE = 'ZOOM_FREE';
 export const SET_ZOOM_MODE = 'SET_ZOOM_MODE';
 export const TOGGLE_SHUFFLE = 'TOGGLE_SHUFFLE';
 export const TOGGLE_UI_HIDDEN = 'TOGGLE_UI_HIDDEN';
+export const TOGGLE_CROPMODE = 'TOGGLE_CROPMODE';
 export const HIDE_UI = 'HIDE_UI';
 export const SHOW_UI = 'SHOW_UI';
 export const UPDATE_SCALE = 'SET_SCALE';

@@ -7,6 +7,7 @@ import Animate from '../Animate';
 import Settings from './Settings';
 import Info from './Info';
 import ContextMenu from './ContextMenu';
+import CropHint from './CropHint';
 
 class Popups extends Component {
   handlePopupClose = name => {
@@ -16,6 +17,7 @@ class Popups extends Component {
   };
 
   render() {
+    const { cropMode } = this.props.viewModes;
     const { popups, trash } = this.props;
     const { onUndoRemove, onDelete, onPathOpen } = this.props;
     const { undoRemove, settings, info, contextMenu } = popups;
@@ -31,6 +33,7 @@ class Popups extends Component {
           onDelete={onDelete}
           position={contextMenuPos}
         />
+        {cropMode && <CropHint />}
       </aside>
     );
   }

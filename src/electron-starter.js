@@ -2,11 +2,13 @@
 const electron = require('electron');
 
 const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
+
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
 const Store = require('electron-store');
 const parseArgs = require('electron-args');
+const fs = require('fs');
 
 let argv = process.argv;
 
@@ -73,7 +75,7 @@ if (!gotTheLock) {
 }
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
-process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+// process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let tray;
 let mainWindow;
@@ -120,10 +122,12 @@ function createWindow() {
     // mainWindow.webContents.openDevTools();
   });
 
+  const indexUrl = isDev ? '/../build/index.html' : 'index.html';
+
   const startUrl =
     process.env.ELECTRON_START_URL ||
     url.format({
-      pathname: path.join(__dirname, '/../build/index.html'),
+      pathname: path.join(__dirname, indexUrl),
       protocol: 'file:',
       slashes: true,
     });
@@ -136,7 +140,6 @@ function createWindow() {
 
   mainWindow.on('show', initContextMenu);
   mainWindow.on('hide', initContextMenu);
-
   mainWindow.on('close', e => {
     e.preventDefault();
     mainWindow.hide();
@@ -152,8 +155,12 @@ function createAdditionalWindow(ref) {
     webPreferences,
   });
 
+  const indexUrl = isDev
+    ? '/../src/secondWindow/index.html'
+    : 'static/js/secondWindow/index.html';
+
   const startUrl = url.format({
-    pathname: path.join(__dirname, '/../src/secondWindow/index.html'),
+    pathname: path.join(__dirname, indexUrl),
     protocol: 'file:',
     slashes: true,
   });
@@ -231,7 +238,6 @@ app.on('before-quit', () => {
 function parseArgumets(args) {
   const argvs = args.slice(isDev ? 2 : 1);
   const cli = parseArgs({ text: cliText, argv: argvs }, cliConf);
-  console.log(cli);
   if (cli.flags.v || cli.flags.h) return closeAllWindows();
   return cli.flags;
 }
@@ -255,7 +261,6 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 
 function updateConfigs({ confs }) {
   const curConf = conf.get('default');
-  console.log(confs);
   conf.set('default', { ...curConf, ...confs });
 }
 
@@ -263,7 +268,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
   switch (type) {
     case 'LOG':
-      console.log(arg);
+      if (isDev) console.log(arg);
       break;
 
     case 'GET_PROPS':
@@ -336,7 +341,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'WRITE_IMAGE_TO_CLIPBOARD':
-      clipboard.writeImage(data.path, clipboard);
+      clipboard.writeImage(data.path, 'clipboard');
       break;
 
     default:

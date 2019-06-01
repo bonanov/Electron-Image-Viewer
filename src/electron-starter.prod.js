@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 
 const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
@@ -6,6 +7,7 @@ const url = require('url');
 const isDev = require('electron-is-dev');
 const Store = require('electron-store');
 const parseArgs = require('electron-args');
+const fs = require('fs');
 
 let argv = process.argv;
 
@@ -44,11 +46,14 @@ const defaultConfig = {
   imagesToPreload: 1,
   backgroundBlur: true,
   hqResize: true,
+  slideTimeOut: 1000,
+  backgroundColor: false,
 };
 
 const config = conf.get('default');
 if (!config) conf.set('default', defaultConfig);
-if (conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+if (!conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
+if (!conf.get('default.slideTimeOut')) conf.set('default.slideTimeOut', 1000);
 
 const preload = path.join(__dirname, 'preload.js');
 
@@ -69,7 +74,7 @@ if (!gotTheLock) {
 }
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
-process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+// process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 
 let tray;
 let mainWindow;
@@ -87,17 +92,18 @@ const wins = {
   forthWindow,
 };
 
-function closeAllWindows() {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-}
-
 function closeOnly() {
   mainWindow.close();
   wins.secondWindow.close();
   wins.thirdWindow.close();
   wins.forthWindow.close();
+}
+
+function closeAllWindows() {
+  // closeOnly();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 }
 
 function createWindow() {
@@ -115,10 +121,12 @@ function createWindow() {
     // mainWindow.webContents.openDevTools();
   });
 
+  const indexUrl = isDev ? '/../build/index.html' : 'index.html';
+
   const startUrl =
     process.env.ELECTRON_START_URL ||
     url.format({
-      pathname: path.join(__dirname, 'index.html'),
+      pathname: path.join(__dirname, indexUrl),
       protocol: 'file:',
       slashes: true,
     });
@@ -128,6 +136,9 @@ function createWindow() {
   mainWindow.on('minimize', () => {
     mainWindow.hide();
   });
+
+  mainWindow.on('show', initContextMenu);
+  mainWindow.on('hide', initContextMenu);
 
   mainWindow.on('close', e => {
     e.preventDefault();
@@ -144,8 +155,12 @@ function createAdditionalWindow(ref) {
     webPreferences,
   });
 
+  const indexUrl = isDev
+    ? '/../src/secondWindow/index.html'
+    : 'static/js/secondWindow/index.html';
+
   const startUrl = url.format({
-    pathname: path.join(__dirname, 'static/js/secondWindow/index.html'),
+    pathname: path.join(__dirname, indexUrl),
     protocol: 'file:',
     slashes: true,
   });
@@ -162,13 +177,34 @@ function initWindows() {
   createWindow();
 }
 
+function toggleWindow() {
+  if (mainWindow.isVisible()) mainWindow.hide();
+  else mainWindow.show();
+}
+
+const trayMenu = () => [
+  {
+    label: mainWindow.isVisible() ? 'Hide' : 'Open',
+    type: 'normal',
+    click() {
+      toggleWindow();
+    },
+  },
+  {
+    label: 'Quit',
+    click() {
+      closeAllWindows();
+    },
+  },
+];
+
 function initTray() {
   tray = new Tray(iconPath);
-  tray.on('click', () => {
-    if (mainWindow.isVisible()) mainWindow.hide();
-    else mainWindow.show();
-  });
+  tray.on('click', toggleWindow);
+  initContextMenu();
 }
+
+const initContextMenu = () => tray.setContextMenu(Menu.buildFromTemplate(trayMenu()));
 
 app.on('ready', () => {
   ({
@@ -180,7 +216,18 @@ app.on('ready', () => {
   initTray();
 });
 
-app.on('window-all-closed', closeAllWindows);
+app.on('will-quit', function() {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('window-all-closed', function() {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  mainWindow.removeAllListeners('close');
+  app.quit();
+});
 
 // app.on('active', () => {
 //   if (mainWindow === null) {
@@ -213,14 +260,15 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 function updateConfigs({ confs }) {
-  conf.set('default', confs);
+  const curConf = conf.get('default');
+  conf.set('default', { ...curConf, ...confs });
 }
 
 ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
   switch (type) {
     case 'LOG':
-      console.log(arg);
+      if (isDev) console.log(arg);
       break;
 
     case 'GET_PROPS':
@@ -293,7 +341,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'WRITE_IMAGE_TO_CLIPBOARD':
-      clipboard.writeImage(data.path, clipboard);
+      clipboard.writeImage(data.payh, 'clipboard');
       break;
 
     default:

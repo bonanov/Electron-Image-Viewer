@@ -7,6 +7,7 @@ const initialState = {
   bgColor: '#222',
   scale: 1,
   slideShow: false,
+  cropMode: false,
   imagePosition: {
     x: 0,
     y: 0,
@@ -14,6 +15,9 @@ const initialState = {
 };
 
 const viewModes = (state = initialState, action) => {
+  if (action.type === types.TOGGLE_CROPMODE) {
+    return { ...state, cropMode: !state.cropMode };
+  }
   if (action.type === types.TOGGLE_SLIDESHOW) {
     return { ...state, slideShow: !state.slideShow };
   }

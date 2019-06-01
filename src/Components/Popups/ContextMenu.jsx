@@ -4,6 +4,7 @@ import { mapKeys } from 'lodash';
 import * as types from '../../constants/actionTypes';
 import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
+import { toDataURL, formatPath } from '../../utils/base';
 
 const { ipcRenderer, clipboard, shell, screen } = window.electron;
 
@@ -31,6 +32,7 @@ class ContextMenu extends Component {
     clientY += 2;
     clientX += 2;
     if (!this.menuEl) return;
+    if (target.closest('.context-menu')) return;
     const { height, width } = this.menuEl.getBoundingClientRect();
 
     const { innerHeight, innerWidth } = window;
@@ -46,6 +48,7 @@ class ContextMenu extends Component {
 
   copyToClipboard = () => {
     const { fullPath } = getCurrentFile();
+    console.log(fullPath);
     clipboard.writeImage(fullPath);
   };
 
@@ -66,6 +69,14 @@ class ContextMenu extends Component {
   onDelete = () => this.handleClick(this.props.onDelete);
 
   onCopy = () => this.handleClick(this.copyToClipboard);
+
+  onCrop = async () => {
+    const { hideUi, resetImagePosition, updateScale, toggleCropMode } = this.props;
+    hideUi();
+    resetImagePosition();
+    updateScale(1);
+    this.handleClick(toggleCropMode);
+  };
 
   onContextMenu = () => this.handleClick(() => this.props.togglePopup('info'));
 
@@ -88,11 +99,14 @@ class ContextMenu extends Component {
         <div onClick={this.onCopy} className="context-menu-item">
           Copy image to clipboard
         </div>
-        <div onClick={this.onContextMenu} className="context-menu-item">
-          Properties
+        <div onClick={this.onCrop} className="context-menu-item">
+          Crop image
         </div>
         <div onClick={this.onDelete} className="context-menu-item context-menu-delete">
           Delete
+        </div>
+        <div onClick={this.onContextMenu} className="context-menu-item">
+          Properties
         </div>
       </div>
     );
@@ -108,7 +122,11 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
+  toggleCropMode: () => ({ type: types.TOGGLE_CROPMODE }),
   togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
+  resetImagePosition: () => ({ type: types.RESET_IMAGE_POSITION }),
+  updateScale: payload => ({ type: types.UPDATE_SCALE, payload }),
+  hideUi: () => ({ type: types.HIDE_UI }),
 };
 export default connect(
   mapStateToProps,

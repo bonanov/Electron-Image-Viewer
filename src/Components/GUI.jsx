@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { connect } from 'react-redux';
+import Cropper from 'react-cropper';
 import * as types from '../constants/actionTypes.js';
 import PositionPanel from './PositionPanel';
 import ControlPanel from './ControlPanel';
@@ -13,7 +14,13 @@ import {
   IMAGE_CONTAINER_SEL,
   PRELOAD_N_IMAGES,
 } from '../constants/base';
-import { toggleFullscreen, mod } from '../utils/base.js';
+import {
+  toggleFullscreen,
+  mod,
+  formatPath,
+  writeDateToDisk,
+  formatFileObject,
+} from '../utils/base.js';
 import {
   getCurrentFile,
   getViewModes,
@@ -22,14 +29,12 @@ import {
   getFileSystem,
   undoFileRemoving,
   getTrash,
+  addFileToList,
 } from '../utils/getValueFromStore.js';
 
-const { ipcRenderer } = window.electron;
-
-const { remote } = window.electron;
+const { ipcRenderer, clipboard, nativeImage, remote } = window.electron;
 const fs = remote.require('fs');
 const trash = window.trash;
-
 class GUI extends Component {
   constructor() {
     super();
@@ -38,6 +43,7 @@ class GUI extends Component {
     this.offsetX = null;
     this.offsetY = null;
     this.initX = null;
+    this.cropperEl = null;
     this.initY = null;
     this.transitionEnded = true;
     this.transitionTimer = null;
@@ -95,6 +101,8 @@ class GUI extends Component {
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
+    if (!ctrlKey && code === 'Escape') return this.handleEscape();
+    if (!ctrlKey && code === 'Enter') return this.handleEnter();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
     if (key === 'F11') {
       e.preventDefault();
@@ -111,6 +119,19 @@ class GUI extends Component {
       this.handlePanelsHide();
       onShuffle();
     }
+  };
+
+  handleEnter = () => {
+    const { cropMode } = this.props.viewModes;
+    if (cropMode) this.handleCrop();
+  };
+
+  handleEscape = () => {
+    const { toggleCropMode, showUi } = this.props;
+    const { cropMode } = this.props.viewModes;
+    if (!cropMode) return;
+    toggleCropMode();
+    showUi();
   };
 
   handleUndoRemoveLast = () => {
@@ -152,10 +173,10 @@ class GUI extends Component {
 
     addPopup('undoRemove');
     // clearTimeout(this.undoRemoveTime);
-    this.undoRemoveTime = setTimeout(() => {
+    setTimeout(() => {
       // removePopup('undoRemove');
       setTrashSeen(currentFile.fullPath);
-    }, 5000);
+    }, 3000);
   };
 
   handleMouseLeave = () => {
@@ -257,6 +278,7 @@ class GUI extends Component {
   };
 
   handleWheel = e => {
+    const { cropMode } = this.props.viewModes;
     const delta = e.deltaY > 0 ? -1 : 1;
     const { clientX, clientY, target } = e;
 
@@ -266,7 +288,7 @@ class GUI extends Component {
     if (target.closest('.rc-tooltip-inner')) return;
 
     if (target.closest('.control-panel-bottom')) return this.handleShiftImage(delta);
-
+    if (cropMode) return;
     this.handleZoom({ delta, clientX, clientY });
     const { imageEl } = this.props;
   };
@@ -365,8 +387,9 @@ class GUI extends Component {
     const { fileSystem } = this.props;
     const { updatePosition, resetImagePosition, setZoomMode, updateScale } = this.props;
     const { fileList, currentPosition } = fileSystem;
-    const { scale, zoomMode } = getViewModes();
+    const { scale, zoomMode, cropMode } = getViewModes();
     if (this.updating) return;
+    if (cropMode) return;
     this.updating = true;
 
     if (fileList.length === currentPosition) return;
@@ -441,13 +464,47 @@ class GUI extends Component {
     ipcRenderer.send('asynchronous-message', message.updateConfigs(confItem));
   };
 
+  handleCrop = () => {
+    if (!this.cropperEl) return;
+    const { toggleCropMode } = this.props;
+    const { fullPath } = getCurrentFile();
+    const { currentPosition } = getFileSystem();
+    // const dataUrl = this.cropperEl.getCroppedCanvas().toDataURL('image/jpeg');
+    this.cropperEl.getCroppedCanvas().toBlob(async blob => {
+      const savePath = await writeDateToDisk(fullPath, blob);
+      const file = await formatFileObject([savePath]);
+      if (!file || !file[0]) return;
+      toggleCropMode();
+      addFileToList({ file: file[0], position: currentPosition });
+    });
+    // console.log(dataUrl);
+    // writeDateToDisk(fullPath, dataUrl);
+
+    // const image = nativeImage.createFromDataURL(data);
+    // console.log(image);
+    // clipboard.writeImage(image);
+    // console.log(image);
+    // ipcRenderer.send(
+    //   'asynchronous-message',
+    //   message.writeImageToClipboard({ base64: dataUrl })
+    // );
+    // console.log(dataUrl);
+  };
+
+  onCrop = () => {
+    const { toggleCropMode, resetImagePosition, updateScale } = this.props;
+    resetImagePosition();
+    updateScale(1);
+    toggleCropMode();
+  };
+
   mainGui = () => {
     const { viewModes, fileSystem, config } = this.props;
-    const { slideShow } = viewModes;
-    const { currentPosition, fileList } = fileSystem;
     const { onShuffle, imageEl } = this.props;
+    const { slideShow, cropMode } = viewModes;
+    const { currentPosition, fileList } = fileSystem;
     const currentFile = getCurrentFile();
-    if (!imageEl || !currentFile) return null;
+    if ((!imageEl && !cropMode) || !currentFile) return null;
     return (
       <React.Fragment>
         <PositionPanel
@@ -470,7 +527,23 @@ class GUI extends Component {
           onShiftImage={this.handleShiftImage}
           onZoomChange={this.handleZoomToggle}
           onToggleShuffle={onShuffle}
+          onCrop={this.onCrop}
         />
+        {cropMode && (
+          <div className="cropper-container_custom">
+            <Cropper
+              checkCrossOrigin={false}
+              autoCrop={false}
+              zoomOnWheel={false}
+              viewMode={1}
+              style={{ height: '100%', width: '100%' }}
+              ref={ref => (this.cropperEl = ref)}
+              src={formatPath(currentFile.fullPath)}
+              guides={false}
+              background={false}
+            />
+          </div>
+        )}
       </React.Fragment>
     );
   };
@@ -515,6 +588,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   toggleSlideShow: () => ({ type: types.TOGGLE_SLIDESHOW }),
+  toggleCropMode: () => ({ type: types.TOGGLE_CROPMODE }),
   updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
   toggleZoomMode: () => ({ type: types.TOGGLE_ZOOM_MODE }),
   togglePopup: payload => ({ type: types.TOGGLE_POPUP, payload }),
@@ -532,8 +606,8 @@ const mapDispatchToProps = {
     payload,
   }),
   resetImagePosition: () => ({ type: types.RESET_IMAGE_POSITION }),
-  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
   updateScale: payload => ({ type: types.UPDATE_SCALE, payload }),
+  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
   showUi: () => ({ type: types.SHOW_UI }),
   hideUi: () => ({ type: types.HIDE_UI }),
 };
