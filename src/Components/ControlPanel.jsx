@@ -4,10 +4,6 @@ import Input from './UI/Input';
 const Tooltip = window.rcTooltip;
 
 class ControlPanel extends Component {
-  state = {
-    trashTooltip: false,
-  };
-
   getZoomIcon = () => {
     const { zoomMode, onZoomChange } = this.props;
     return (
@@ -50,6 +46,7 @@ class ControlPanel extends Component {
         destroyTooltipOnHide
         placement="top"
         trigger={['hover']}
+        mouseLeaveDelay={0.2}
         overlay={
           <Input
             step={0.25}
@@ -68,38 +65,31 @@ class ControlPanel extends Component {
     );
   };
 
-  tooltipOn = () => this.setState({ trashTooltip: true });
-
-  tooltipOff = () => this.setState({ trashTooltip: false });
-
-  onDeleteClick = () => {
-    const { trashTooltip } = this.state;
-    const { onFileDelete } = this.props;
-    if (!trashTooltip) return;
-    onFileDelete();
-    this.tooltipOff();
-  };
-
   getTrashIcon = () => {
-    const { trashTooltip } = this.state;
+    const { onFileDelete } = this.props;
     const classes = `control trash`;
     return (
-      <span
-        onMouseLeave={this.tooltipOff}
-        onMouseEnter={this.tooltipOn}
-        title="Delete"
-        className={classes}
-      >
-        <div className="trash-tooltip_container" hidden={!trashTooltip}>
-          <div
-            onClick={this.onDeleteClick}
-            className={`trash-tooltip ${trashTooltip ? 'trash-visible' : 'trash-hidden'}`}
-          >
+      <Tooltip
+        destroyTooltipOnHide
+        placement="top"
+        align={{ offset: [-20, 30] }}
+        trigger={['hover']}
+        overlayClassName="trash-tooltip_container"
+        overlay={
+          <div onClick={onFileDelete} className="trash-tooltip trash-visible">
             Delete
           </div>
-        </div>
-        <i className="fa fa-trash" />
-      </span>
+        }
+      >
+        <span
+          onMouseLeave={this.tooltipOff}
+          onMouseEnter={this.tooltipOn}
+          title="Delete"
+          className={classes}
+        >
+          <i className="fa fa-trash" />
+        </span>
+      </Tooltip>
     );
   };
 
@@ -112,8 +102,30 @@ class ControlPanel extends Component {
     );
   };
 
+  getShiftIcons = () => (
+    <React.Fragment>
+      <span
+        title="Previous image"
+        onClick={this.onShiftLeft}
+        className="control angle angle-left"
+      >
+        <i className="fa fa-chevron-left" />
+      </span>
+      <span
+        title="Next image"
+        onClick={this.onShiftRight}
+        className="control angle angle-right"
+      >
+        <i className="fa fa-chevron-right" />
+      </span>
+    </React.Fragment>
+  );
+
+  onShiftLeft = () => this.props.onShiftImage(-1);
+
+  onShiftRight = () => this.props.onShiftImage(1);
+
   render() {
-    const { onShiftImage } = this.props;
     const { hidden, slideShow } = this.props;
     const hiddenClasses = hidden ? 'panel-hidden' : 'panel-visible';
     return (
@@ -123,20 +135,7 @@ class ControlPanel extends Component {
           {this.getSlideShowIcon(slideShow)}
           {this.getRandomIcon()}
           {this.getZoomIcon()}
-          <span
-            title="Previous image"
-            onClick={() => onShiftImage(-1)}
-            className="control angle angle-left"
-          >
-            <i className="fa fa-chevron-left" />
-          </span>
-          <span
-            title="Next image"
-            onClick={() => onShiftImage(1)}
-            className="control angle angle-right"
-          >
-            <i className="fa fa-chevron-right" />
-          </span>
+          {this.getShiftIcons()}
           {this.getCogIcon()}
           {this.getFullScreenIcon()}
         </div>

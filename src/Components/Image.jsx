@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
 import * as types from '../constants/actionTypes.js';
-import { getCurrentFile, getViewModes, getFileSystem } from '../utils/getValueFromStore';
+import { getCurrentFile, getViewModes } from '../utils/getValueFromStore';
 
 class ImageContainer extends Component {
   imageEl = null;
@@ -77,12 +77,4 @@ const mapStateToProps = state => ({
   config: state.config,
 });
 
-const mapDispatchToProps = {
-  setZoomFree: () => ({ type: types.ZOOM_FREE }),
-  setZoomFit: () => ({ type: types.ZOOM_FIT }),
-  setZoomExpand: () => ({ type: types.ZOOM_EXPAND }),
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ImageContainer);
+export default connect(mapStateToProps)(ImageContainer);

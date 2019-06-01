@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { mapKeys } from 'lodash';
 import * as types from '../../constants/actionTypes';
-import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
-import { toDataURL, formatPath } from '../../utils/base';
 
-const { ipcRenderer, clipboard, shell, screen } = window.electron;
+const { clipboard, shell } = window.electron;
 
 class ContextMenu extends Component {
   state = {
@@ -18,13 +15,6 @@ class ContextMenu extends Component {
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleMouseDown);
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { contextMenu } = this.props.popups;
-    if (contextMenu && !prevProps.popups.contextMenu) {
-      // console.log('vis');
-    }
   }
 
   handleMouseDown = e => {

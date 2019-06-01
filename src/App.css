@@ -683,6 +683,7 @@ input[type=number].custom-input-element::-webkit-outer-spin-button {
   max-width: 325px;
   text-align: center;
   color: #eee;
+  z-index: 10000;
   font-size: 17px;
 }
 .crop-hint {
@@ -715,3 +716,19 @@ input[type=number].custom-input-element::-webkit-outer-spin-button {
 .cropper-view-box {
   outline-color: #3978B2!important;
 }
+
+.trash-tooltip_container {
+  width: 0!important;
+}
+
+.trash-tooltip_container .rc-tooltip-inner {
+  background-color: transparent!important;
+  box-shadow: none!important;
+  padding: 0!important;
+  height: 0!important;
+  min-height: 0!important;
+}
+.trash-tooltip_container .rc-tooltip-arrow {
+  display: none!important;
+}
+

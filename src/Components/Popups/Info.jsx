@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { mapKeys } from 'lodash';
-import * as types from '../../constants/actionTypes';
-import * as message from '../../constants/asyncMessages';
 import { getCurrentFile } from '../../utils/getValueFromStore';
 
-const { ipcRenderer, clipboard } = window.electron;
+const { clipboard } = window.electron;
 const prettyBytes = window.prettyBytes;
 const dates = window.dates;
 const TimeAgo = window.timeAgo;
@@ -77,19 +75,9 @@ class Info extends Component {
   getExifInfo = file => {
     const { fileProps } = file;
     const { exifData } = fileProps;
-    let dimensions;
-    let size;
-
-    if (fileProps && fileProps.width) {
-      dimensions = `${fileProps.width}×${fileProps.height}`;
-    }
-    // exifDataEntries.map(en => console.log(en));
-
     const infos = this.formatExif(exifData);
     let infosText = '';
     infos.map(entry => (infosText = `${infosText}\n${entry.keys}: ${entry.vals}`));
-
-    if (file.size) size = prettyBytes(file.size);
     return (
       <div className="info exif-info">
         <div
@@ -103,14 +91,7 @@ class Info extends Component {
           </span>
         </div>
         <div className="info-item_container">
-          {/* <Scrollbars
-            style={{ height: '100%' }}
-            autoHeight
-            autoHeightMin="50px"
-            autoHeightMax="100%"
-          > */}
           {infos.map((entry, index) => this.getInfoItem(entry.keys, entry.vals, index))}
-          {/* </Scrollbars> */}
         </div>
       </div>
     );
@@ -120,14 +101,9 @@ class Info extends Component {
     const currentFile = getCurrentFile();
     if (!currentFile) return null;
     const { fileProps } = currentFile;
-    // if (!fileProps) return null;
-    // const { exifData } = fileProps;
-    // if (!exifData) return null;
-    // console.log(exifData);
-
     const exif = fileProps && fileProps.exifData;
+    const { visible } = this.props;
 
-    const { config, visible, onClose } = this.props;
     const classes = `popup info_container ${visible ? 'info_container_visible' : ''}`;
     return (
       <div className={classes}>
@@ -139,16 +115,6 @@ class Info extends Component {
 }
 
 const mapStateToProps = state => ({
-  viewModes: state.viewModes,
   fileSystem: state.fileSystem,
-  popups: state.popups,
-  config: state.config,
 });
-
-const mapDispatchToProps = {
-  updateConfig: payload => ({ type: types.UPDATE_CONFIG, payload }),
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Info);
+export default connect(mapStateToProps)(Info);

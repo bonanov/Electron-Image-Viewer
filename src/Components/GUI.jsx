@@ -121,10 +121,7 @@ class GUI extends Component {
     }
   };
 
-  handleEnter = () => {
-    const { cropMode } = this.props.viewModes;
-    if (cropMode) this.handleCrop();
-  };
+  handleEnter = () => (this.props.viewModes.cropMode ? this.handleCrop() : null);
 
   handleEscape = () => {
     const { toggleCropMode, showUi } = this.props;
@@ -177,11 +174,6 @@ class GUI extends Component {
       // removePopup('undoRemove');
       setTrashSeen(currentFile.fullPath);
     }, 3000);
-  };
-
-  handleMouseLeave = () => {
-    const { hideUi } = this.props;
-    hideUi();
   };
 
   handleRmb = e => {
@@ -241,8 +233,7 @@ class GUI extends Component {
     updateImagePosition({ x, y });
   };
 
-  handleMouseUp = e => {
-    const { togglePopup } = this.props;
+  handleMouseUp = () => {
     const { moving } = this.state;
     if (moving) {
       this.setState({ moving: false });
@@ -282,13 +273,12 @@ class GUI extends Component {
     const delta = e.deltaY > 0 ? -1 : 1;
     const { clientX, clientY, target } = e;
 
+    if (cropMode) return;
     if (target.closest('.popup')) return;
-
     if (target.closest('.unwheel')) return;
     if (target.closest('.rc-tooltip-inner')) return;
-
     if (target.closest('.control-panel-bottom')) return this.handleShiftImage(delta);
-    if (cropMode) return;
+
     this.handleZoom({ delta, clientX, clientY });
     const { imageEl } = this.props;
   };
@@ -388,6 +378,7 @@ class GUI extends Component {
     const { updatePosition, resetImagePosition, setZoomMode, updateScale } = this.props;
     const { fileList, currentPosition } = fileSystem;
     const { scale, zoomMode, cropMode } = getViewModes();
+
     if (this.updating) return;
     if (cropMode) return;
     this.updating = true;
@@ -418,48 +409,37 @@ class GUI extends Component {
     }, 20);
   };
 
-  handleSettingsOpen = () => {
-    const { togglePopup } = this.props;
-    togglePopup('settings');
-  };
+  handleSettingsOpen = () => this.props.togglePopup('settings');
 
-  handleInfo = () => {
-    const { togglePopup } = this.props;
-    const { fullPath } = getCurrentFile();
-    console.log();
-    togglePopup('info');
-    // ipcRenderer.send('asynchronous-message', message.getExif(fullPath));
-  };
+  handleInfo = () => this.props.togglePopup('info');
+
+  handleMouseLeave = () => this.props.hideUi();
 
   handleSlideShowToggle = () => {
     const { toggleSlideShow } = this.props;
     const { viewModes } = this.props;
     const { slideShow } = viewModes;
+
+    clearTimeout(this.slideShowTimer);
     if (!slideShow) this.handleSlideShow();
     toggleSlideShow();
   };
 
   handleSlideShow = () => {
     const { slideTimeOut } = this.props.config;
+
     this.handleShiftImage(1);
+    clearTimeout(this.slideShowTimer);
     this.slideShowTimer = setTimeout(() => {
       const { slideShow } = this.props.viewModes;
-      if (!slideShow) {
-        clearTimeout(this.slideShowTimer);
-        return;
-      }
-
-      this.handleSlideShow();
+      if (slideShow) return this.handleSlideShow();
     }, slideTimeOut);
   };
 
   handleSlideShowTimeOutChange = value => {
     const { updateConfig } = this.props;
-    // clearTimeout(this.slideShowTimer);
-    // this.handleSlideShow();
 
     const confItem = { slideTimeOut: value * 1000 };
-
     updateConfig(confItem);
     ipcRenderer.send('asynchronous-message', message.updateConfigs(confItem));
   };
@@ -477,18 +457,6 @@ class GUI extends Component {
       toggleCropMode();
       addFileToList({ file: file[0], position: currentPosition });
     });
-    // console.log(dataUrl);
-    // writeDateToDisk(fullPath, dataUrl);
-
-    // const image = nativeImage.createFromDataURL(data);
-    // console.log(image);
-    // clipboard.writeImage(image);
-    // console.log(image);
-    // ipcRenderer.send(
-    //   'asynchronous-message',
-    //   message.writeImageToClipboard({ base64: dataUrl })
-    // );
-    // console.log(dataUrl);
   };
 
   onCrop = () => {
@@ -596,7 +564,6 @@ const mapDispatchToProps = {
   removePopup: payload => ({ type: types.REMOVE_POPUP, payload }),
   setZoomMode: payload => ({ type: types.SET_ZOOM_MODE, payload }),
   setZoomFree: () => ({ type: types.ZOOM_FREE }),
-  updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   updatePosition: payload => ({ type: types.UPDATE_CURRENT_POSITION, payload }),
   addToTrash: payload => ({ type: types.ADD_TO_TRASH, payload }),
   setTrashSeen: payload => ({ type: types.SET_TRASH_SEEN, payload }),
@@ -607,7 +574,6 @@ const mapDispatchToProps = {
   }),
   resetImagePosition: () => ({ type: types.RESET_IMAGE_POSITION }),
   updateScale: payload => ({ type: types.UPDATE_SCALE, payload }),
-  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
   showUi: () => ({ type: types.SHOW_UI }),
   hideUi: () => ({ type: types.HIDE_UI }),
 };

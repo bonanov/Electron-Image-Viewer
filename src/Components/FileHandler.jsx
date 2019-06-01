@@ -9,7 +9,6 @@ import { formatPath, getBlobFromBase64 } from '../utils/base';
 import {
   getCurrentFilePath,
   getCurrentFile,
-  getInitialFile,
   getFileSystem,
   getClosestNFiles,
   getViewModes,
@@ -18,18 +17,11 @@ import {
 
 const fac = new FastAverageColor();
 
-const { remote } = window.electron;
-const fs = remote.require('fs');
-
 const { ipcRenderer } = window.electron;
 
 class FileHandler extends Component {
   constructor() {
     super();
-    this.state = {
-      base64: '',
-      base64Bg: '',
-    };
     this.imageEl = null;
     this.resizeTimer = null;
   }
@@ -101,7 +93,6 @@ class FileHandler extends Component {
     const elementWidth = image.offsetWidth;
     const scale = fileProps.width / elementWidth;
     updateScale(scale);
-    // this.handleResize();
   };
 
   handleColor = () => {
@@ -122,7 +113,6 @@ class FileHandler extends Component {
   };
 
   handleBlur = () => {
-    // return;
     const { fullPath, blurBlob } = getCurrentFile();
     if (!fullPath) return;
 
@@ -159,8 +149,6 @@ class FileHandler extends Component {
 
     clonedList[position].blurBlob = blob;
     updateFileList(clonedList);
-
-    // this.setState({ base64Bg: base64 });
   };
 
   handleProps = () => {
@@ -186,14 +174,12 @@ class FileHandler extends Component {
     const { width, height, aspect, err, fullPath: path } = data;
 
     if (err) {
-      // toast.error(err.message);
       onFileError(data);
       return;
     }
 
     const position = getFilePositionByPath(path);
     const clonedList = clone(fileList);
-    // if (clonedList[position].fileProps) return;
     clonedList[position].fileProps = { width, height, aspect };
     updateFileList(clonedList);
   };
@@ -206,7 +192,6 @@ class FileHandler extends Component {
 
     const position = getFilePositionByPath(fullPath);
     const clonedList = clone(fileList);
-    // if (clonedList[position].fileProps) return;
     const currentProps = clonedList[position].fileProps;
     if (!currentProps) clonedList[position].fileProps = {};
     clonedList[position].fileProps = { ...currentProps, exifData };
@@ -218,7 +203,6 @@ class FileHandler extends Component {
     if (!fullPath) return;
 
     const { innerHeight, innerWidth } = window;
-    // const image = this.imageEl.querySelector('.image');
     const newMessage = {
       fullPath,
       width: innerWidth,
@@ -235,13 +219,13 @@ class FileHandler extends Component {
     // We have to keep a reference to our blob and cleaning it
     // to prevent from a memory leak
     // URL.revokeObjectURL(this.blob);
+    // upd THIS SHIT IS NOT PREVENTING US FROM A MEMORY LEAK
+    // FIXME: momory leak
     this.blob = blob;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
     if (path !== fullPath) return;
-    // this.setState({ base64 });
     updateCurrentBlob(blob);
-    // updateFileList(clonedList);
   };
 
   handleRef = ref => {
@@ -251,8 +235,7 @@ class FileHandler extends Component {
   };
 
   render() {
-    const { base64, base64Bg } = this.state;
-    return <ImageContainer base64Bg={base64Bg} base64={base64} onRef={this.handleRef} />;
+    return <ImageContainer onRef={this.handleRef} />;
   }
 }
 

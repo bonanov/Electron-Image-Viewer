@@ -202,7 +202,6 @@ class FSInterface extends Component {
   };
 
   render() {
-    const { cropMode } = this.props.viewModes;
     const currentFile = getCurrentFile();
     return (
       <React.Fragment>

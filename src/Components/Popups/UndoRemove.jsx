@@ -20,9 +20,7 @@ const UndoRemove = ({ onClick, trash }) => {
             <div className="undo-remove">
               <span onClick={() => onClick(fullPath)} className="undo-text">
                 Undo <span className="undo-file-name">{fileName}</span> deletion
-                {trash.length - 1 === i && (
-                  <span className="undo-hotkey"> (ctrl+z)</span>
-                )}
+                {trash.length - 1 === i && <span className="undo-hotkey"> (ctrl+z)</span>}
               </span>
             </div>
           </Animate>

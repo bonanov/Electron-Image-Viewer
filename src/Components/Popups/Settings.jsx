@@ -33,14 +33,6 @@ class Settings extends Component {
     ipcRenderer.send('asynchronous-message', message.updateConfigs(confItem));
   };
 
-  // hqResize: true,
-  // keepInstance: true,
-  // trayIcon: true,
-  // backgroundBlur: true,
-  // backgroundColor: false,
-  // preloadImages: true,
-  // imagesToPreload: 1,
-
   getItem = (name, text, checked, index) => (
     <div
       data-name={name}
