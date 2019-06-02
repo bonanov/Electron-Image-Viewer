@@ -70,6 +70,8 @@ const webPreferences = {
   nodeIntegrationInWorker: true,
   preload,
   webSecurity: false,
+  devTools: isDev,
+  backgroundThrottling: false,
 };
 
 const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
@@ -118,21 +120,27 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width,
     height,
-    frame: false,
+    frame: true,
     transparent: false,
-    show: false,
-    title: 'bonana image viewer',
+    show: true,
+    useContentSize: true,
+    backgroundColor: '#222222',
+    title: 'Bonana Image Viewer',
     icon: path.join(__dirname, 'assets/icons/64x64.png'),
     webPreferences,
   });
 
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.setMenu(null);
+  mainWindow.removeMenu(null);
+
+  mainWindow.webContents.on('did-start-loading', () => {
     mainWindow.show();
     initTray();
     mainWindow.on('show', initContextMenu);
     mainWindow.on('hide', initContextMenu);
-    // mainWindow.webContents.openDevTools();
   });
+
+  mainWindow.once('ready-to-show', () => {});
 
   const indexUrl = isDev ? '/../build/index.html' : 'index.html';
 
@@ -219,10 +227,13 @@ function initTray() {
 const initContextMenu = () => tray.setContextMenu(Menu.buildFromTemplate(trayMenu()));
 
 app.on('ready', () => {
-  ({
-    width: maxWidth,
-    height: maxHeight,
-  } = electron.screen.getPrimaryDisplay().workAreaSize);
+  if (!isDev) {
+    BrowserWindow.removeDevToolsExtension('React Developer Tools');
+    BrowserWindow.removeDevToolsExtension('Redux DevTools');
+    BrowserWindow.removeDevToolsExtension('devtron');
+  }
+  maxWidth = electron.screen.getPrimaryDisplay().workAreaSize.width;
+  maxHeight = electron.screen.getPrimaryDisplay().workAreaSize.height;
   initWindows();
 
   // initTray();

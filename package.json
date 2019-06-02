@@ -48,11 +48,11 @@
   "email": "a39345@outlook.com",
   "description": "image viewer aye",
   "author": "Bonan <john@doe.com>",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "homepage": "./",
   "main": "public/electron.js",
-  "maineed": "src/electron-starter.prod.js",
+  "maineed": "src/electron-starter.js",
   "dependencies": {
     "command-line-args": "^5.1.1",
     "config": "^3.1.0",
