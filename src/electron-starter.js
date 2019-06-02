@@ -9,6 +9,9 @@ const isDev = require('electron-is-dev');
 const Store = require('electron-store');
 const parseArgs = require('electron-args');
 const fs = require('fs');
+const os = require('os');
+
+const cpuCount = os.cpus().length > 2 ? os.cpus().length : 2;
 
 let argv = process.argv;
 
@@ -49,12 +52,15 @@ const defaultConfig = {
   hqResize: true,
   slideTimeOut: 1000,
   backgroundColor: false,
+  numberOfExtraThreads: 3,
 };
 
 const config = conf.get('default');
 if (!config) conf.set('default', defaultConfig);
 if (!conf.get('default.backgroundColor')) conf.set('default.backgroundColor', false);
 if (!conf.get('default.slideTimeOut')) conf.set('default.slideTimeOut', 1000);
+if (!conf.get('default.numberOfExtraThreads'))
+  conf.set('default.numberOfExtraThreads', 3);
 
 const preload = path.join(__dirname, 'preload.js');
 
@@ -79,25 +85,26 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 let tray;
 let mainWindow;
-let secondWindow;
-let thirdWindow;
-let forthWindow;
+const extraWindows = [];
+// let secondWindow;
+// let thirdWindow;
+// let forthWindow;
 const width = 1280;
 const height = 720;
 let maxWidth = 1920;
-let maxHeight = 1920;
+let maxHeight = 1080;
 
-const wins = {
-  secondWindow,
-  thirdWindow,
-  forthWindow,
-};
+// const wins = {
+//   secondWindow,
+//   thirdWindow,
+//   forthWindow,
+// };
 
 function closeOnly() {
   mainWindow.close();
-  wins.secondWindow.close();
-  wins.thirdWindow.close();
-  wins.forthWindow.close();
+  // wins.secondWindow.close();
+  // wins.thirdWindow.close();
+  // wins.forthWindow.close();
 }
 
 function closeAllWindows() {
@@ -112,13 +119,18 @@ function createWindow() {
     width,
     height,
     frame: true,
+    transparent: false,
     show: false,
     title: 'bonana image viewer',
     icon: path.join(__dirname, 'assets/icons/64x64.png'),
     webPreferences,
   });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    initTray();
+    mainWindow.on('show', initContextMenu);
+    mainWindow.on('hide', initContextMenu);
     // mainWindow.webContents.openDevTools();
   });
 
@@ -138,8 +150,6 @@ function createWindow() {
     mainWindow.hide();
   });
 
-  mainWindow.on('show', initContextMenu);
-  mainWindow.on('hide', initContextMenu);
   mainWindow.on('close', e => {
     e.preventDefault();
     mainWindow.hide();
@@ -148,8 +158,8 @@ function createWindow() {
   mainWindow.on('closed', closeAllWindows);
 }
 
-function createAdditionalWindow(ref) {
-  wins[ref] = new BrowserWindow({
+function createAdditionalWindow() {
+  const winName = new BrowserWindow({
     title: 'background thread',
     show: false,
     webPreferences,
@@ -165,16 +175,18 @@ function createAdditionalWindow(ref) {
     slashes: true,
   });
 
-  wins[ref].on('closed', closeAllWindows);
+  winName.on('closed', closeAllWindows);
 
-  wins[ref].loadURL(startUrl);
+  winName.loadURL(startUrl);
+  extraWindows.push(winName);
 }
 
 function initWindows() {
-  createAdditionalWindow('secondWindow');
-  createAdditionalWindow('thirdWindow');
-  createAdditionalWindow('forthWindow');
-  createWindow();
+  const n = cpuCount;
+  for (let i = 0; i < n; i++) {
+    createAdditionalWindow();
+    if (i === n - 1) createWindow();
+  }
 }
 
 function toggleWindow() {
@@ -211,9 +223,9 @@ app.on('ready', () => {
     width: maxWidth,
     height: maxHeight,
   } = electron.screen.getPrimaryDisplay().workAreaSize);
-
   initWindows();
-  initTray();
+
+  // initTray();
 });
 
 app.on('will-quit', function() {
@@ -224,16 +236,11 @@ app.on('window-all-closed', function() {
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', e => {
   mainWindow.removeAllListeners('close');
   app.quit();
+  e.preventDefault();
 });
-
-// app.on('active', () => {
-//   if (mainWindow === null) {
-//     createWindow();
-//   }
-// });
 
 function parseArgumets(args) {
   const argvs = args.slice(isDev ? 2 : 1);
@@ -264,15 +271,26 @@ function updateConfigs({ confs }) {
   conf.set('default', { ...curConf, ...confs });
 }
 
+function handleWindowSize(data) {}
+
+const mod = (n, m) => ((n % m) + m) % m;
+
+let winNum = -1;
+
 ipcMain.on('asynchronous-message', (event, arg) => {
   const { data, type } = arg;
+  winNum = mod(winNum + 1, extraWindows.length);
   switch (type) {
     case 'LOG':
       if (isDev) console.log(arg);
       break;
 
+    case 'SET_WINDOW_SIZE':
+      handleWindowSize(data);
+      break;
+
     case 'GET_PROPS':
-      wins.secondWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_PROPS':
@@ -280,7 +298,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'GET_RESIZED':
-      wins.secondWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_RESIZED':
@@ -288,7 +306,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'GET_COLOR':
-      wins.secondWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_COLOR':
@@ -296,7 +314,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'GET_BLURED':
-      wins.thirdWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_BLURED':
@@ -304,7 +322,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'GET_EXIF':
-      wins.secondWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_EXIF':
@@ -312,7 +330,7 @@ ipcMain.on('asynchronous-message', (event, arg) => {
       break;
 
     case 'GET_FILELIST':
-      wins.forthWindow.webContents.send('asynchronous-message', arg);
+      extraWindows[winNum].webContents.send('asynchronous-message', arg);
       break;
 
     case 'SEND_FILELIST':

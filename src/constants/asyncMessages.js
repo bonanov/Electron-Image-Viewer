@@ -117,3 +117,11 @@ export const writeImageToClipboard = ({ base64 }) => ({
     base64,
   },
 });
+
+export const setWindowSize = ({ height, width }) => ({
+  type: 'SET_WINDOW_SIZE',
+  data: {
+    height,
+    width,
+  },
+});

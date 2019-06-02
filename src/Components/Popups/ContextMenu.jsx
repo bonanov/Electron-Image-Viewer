@@ -22,6 +22,7 @@ class ContextMenu extends Component {
     clientY += 2;
     clientX += 2;
     if (!this.menuEl) return;
+    if (e.which !== 3) return;
     if (target.closest('.context-menu')) return;
     const { height, width } = this.menuEl.getBoundingClientRect();
 
@@ -75,14 +76,13 @@ class ContextMenu extends Component {
     const { top, left } = this.state;
     const currentFile = getCurrentFile();
     if (!currentFile) return null;
-    const zIndex = contextMenu ? 102 : -1;
+    // const zIndex = contextMenu ? 102 : -1;
+    const classes = `popup context-menu ${
+      !contextMenu ? 'context-menu_hidden' : 'context-menu_visible'
+    }`;
 
     return (
-      <div
-        ref={ref => (this.menuEl = ref)}
-        style={{ left, top, zIndex }}
-        className="popup context-menu"
-      >
+      <div ref={ref => (this.menuEl = ref)} style={{ left, top }} className={classes}>
         <div onClick={this.onPathOpen} className="context-menu-item">
           Open in a file manager
         </div>

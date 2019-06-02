@@ -56,7 +56,7 @@ export const resizeImage = async ({ fullPath, width, height }) => {
       })
       .png({ compressionLevel: 0 })
       .toBuffer()
-      .then(data => resolve(pngBase64Prefix + data.toString('base64')))
+      .then(data => resolve([new Uint8Array(data)]))
       // eslint-disable-next-line prefer-promise-reject-errors
       .catch(err => reject(err));
   });

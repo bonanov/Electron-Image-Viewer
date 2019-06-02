@@ -74,9 +74,10 @@ class FileHandler extends Component {
     this.handleProps();
 
     updateCurrentBlob('');
-    if (c.backgroundBlur) this.handleBlur();
+    // TODO: figure out c.slideTimeOut
+    if (c.backgroundBlur && (c.slideTimeOut >= 500 || !slideShow)) this.handleBlur();
     if (c.backgroundColor) this.handleColor();
-    if (c.hqResize && (c.slideTimeOut > 3000 || !slideShow) && type !== 'gif') {
+    if (c.hqResize && (c.slideTimeOut >= 500 || !slideShow) && type !== 'gif') {
       this.handleResize();
     }
     this.handleScale();
@@ -213,12 +214,13 @@ class FileHandler extends Component {
   };
 
   setResized = async ({ base64, fullPath: path }) => {
+    // TODO: it unitarray, not base64
     const { updateCurrentBlob } = this.props;
-    const blob = await getBlobFromBase64(base64);
+    URL.revokeObjectURL(this.blob);
+    const blob = URL.createObjectURL(new Blob(base64));
 
     // We have to keep a reference to our blob and cleaning it
     // to prevent from a memory leak
-    // URL.revokeObjectURL(this.blob);
     // upd THIS SHIT IS NOT PREVENTING US FROM A MEMORY LEAK
     // FIXME: momory leak
     this.blob = blob;

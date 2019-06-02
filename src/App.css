@@ -572,12 +572,27 @@ body {
   user-select: none;
   letter-spacing: -0.02em;
   z-index: 102;
-  
+  transition: 0.1s opacity;
+}
+
+.context-menu_hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.context-menu_hidden .context-menu-item {
+  visibility: hidden;
+}
+
+.context-menu_visible {
+  visibility: visible;
+  opacity: 1;
+  transition: 0.0;
 }
 
 .context-menu-item {
   cursor: pointer;
-  padding: 6px 18px;
+  padding: 3px 18px;
   transition: 0.05s;
   font-size: 15px;
   font-weight: 400;

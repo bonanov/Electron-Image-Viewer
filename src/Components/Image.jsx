@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { formatPath } from '../utils/base';
 import * as types from '../constants/actionTypes.js';
-import { getCurrentFile, getViewModes } from '../utils/getValueFromStore';
+import { getCurrentFile, getViewModes, getFileSystem } from '../utils/getValueFromStore';
 
 class ImageContainer extends Component {
+  imageContainer = null;
+
   imageEl = null;
 
   getStyle = () => {
@@ -23,7 +25,7 @@ class ImageContainer extends Component {
   handleRef = ref => {
     const { onRef } = this.props;
     onRef(ref);
-    this.imageEl = ref;
+    this.imageContainer = ref;
   };
 
   render() {
@@ -64,7 +66,7 @@ class ImageContainer extends Component {
     <div ref={handleRef} className="image-container image-container-selector">
       {src && (
         <div style={{ ...style }} className="image">
-          <img className="image-inner" src={src} />
+          <img ref={ref => (this.imageEl = ref)} className="image-inner" src={src} />
         </div>
       )}
     </div>

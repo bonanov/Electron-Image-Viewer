@@ -35,9 +35,9 @@ class ControlPanel extends Component {
     );
   };
 
-  getSlideShowIcon = slideShow => {
+  getSlideShowIcon = () => {
     const { onToggleSlideShow, onSlideShowTimeoutChange } = this.props;
-    const { slideShowTimeOut } = this.props;
+    const { slideShowTimeOut, slideShow } = this.props;
     const classes = `control slideshow-mode unwheel ${
       slideShow ? 'slideshow-enabled' : ''
     }`;
@@ -50,7 +50,7 @@ class ControlPanel extends Component {
         overlay={
           <Input
             step={0.25}
-            min={0.25}
+            min={0.15}
             max={120}
             initialValue={slideShowTimeOut / 1000}
             onChange={onSlideShowTimeoutChange}
@@ -126,13 +126,14 @@ class ControlPanel extends Component {
   onShiftRight = () => this.props.onShiftImage(1);
 
   render() {
-    const { hidden, slideShow } = this.props;
+    const { hidden } = this.props;
+    const classes = 'control-panel-container control-panel-bottom';
     const hiddenClasses = hidden ? 'panel-hidden' : 'panel-visible';
     return (
-      <div className={`control-panel-container control-panel-bottom ${hiddenClasses}`}>
+      <div className={`${classes} ${hiddenClasses}`}>
         <div className="controls">
           {this.getTrashIcon()}
-          {this.getSlideShowIcon(slideShow)}
+          {this.getSlideShowIcon()}
           {this.getRandomIcon()}
           {this.getZoomIcon()}
           {this.getShiftIcons()}
