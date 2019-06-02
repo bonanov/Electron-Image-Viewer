@@ -62,11 +62,12 @@ class DropArea extends Component {
   // type: "image/jpeg"
 
   handleFiles = files => {
+    console.log(files.length);
     const { onDrop } = this.props;
     const fileList = {
       list: [],
       dir: '',
-      handleDir: true,
+      omitDir: true,
     };
     [...files].forEach(file => {
       const fileObject = this.formatFileObject(file);
@@ -80,7 +81,7 @@ class DropArea extends Component {
 
     fileList.dir = firstFile.dir;
     if (fileList.list.length > 1) {
-      fileList.handleDir = false;
+      fileList.omitDir = false;
     }
     onDrop(fileList);
   };
