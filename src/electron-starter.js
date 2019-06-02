@@ -1,14 +1,17 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 
-const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
+const { app } = electron;
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) return app.quit();
+
+const { BrowserWindow, ipcMain, Tray, Menu, clipboard } = electron;
 
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
 const Store = require('electron-store');
 const parseArgs = require('electron-args');
-const fs = require('fs');
 const os = require('os');
 
 const cpuCount = os.cpus().length > 2 ? os.cpus().length : 2;
@@ -76,8 +79,6 @@ const webPreferences = {
 
 const iconPath = path.join(__dirname, 'assets/icons/64x64.png');
 
-const gotTheLock = app.requestSingleInstanceLock();
-
 if (!gotTheLock) {
   closeAllWindows();
 }
@@ -130,12 +131,12 @@ function createWindow() {
     webPreferences,
   });
 
-  mainWindow.setMenu(null);
-  mainWindow.removeMenu();
-
   mainWindow.webContents.on('did-start-loading', () => {
-    mainWindow.setMenu(null);
-    mainWindow.removeMenu();
+    if (!isDev) {
+      mainWindow.setMenu(null);
+      mainWindow.removeMenu();
+    }
+
     mainWindow.show();
     initTray();
     mainWindow.on('show', initContextMenu);
