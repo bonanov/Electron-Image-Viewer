@@ -95,7 +95,7 @@
     "build-win": "npm-run-all build-basic dist-linux",
     "bundle-dev": "webpack src/secondWindow/utilApp.js -o src/secondWindow/bundle.js",
     "bundle-move": "cp src/secondWindow/ build/static/js/secondWindow/ -r",
-    "electron-move": "cp src/electron-starter.prod.js build/electron.js -r && cp src/preload.js build/preload.js -r && cp src/assets build/assets -r",
+    "electron-move": "cp src/electron-starter.js build/electron.js -r && cp src/preload.js build/preload.js -r && cp src/assets build/assets -r",
     "electron-rebuild": "electron-rebuild",
     "flow": "flow",
     "test": "react-scripts test --env=jsdom",

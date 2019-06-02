@@ -131,9 +131,11 @@ function createWindow() {
   });
 
   mainWindow.setMenu(null);
-  mainWindow.removeMenu(null);
+  mainWindow.removeMenu();
 
   mainWindow.webContents.on('did-start-loading', () => {
+    mainWindow.setMenu(null);
+    mainWindow.removeMenu();
     mainWindow.show();
     initTray();
     mainWindow.on('show', initContextMenu);
@@ -227,6 +229,7 @@ function initTray() {
 const initContextMenu = () => tray.setContextMenu(Menu.buildFromTemplate(trayMenu()));
 
 app.on('ready', () => {
+  if (!gotTheLock) return;
   if (!isDev) {
     BrowserWindow.removeDevToolsExtension('React Developer Tools');
     BrowserWindow.removeDevToolsExtension('Redux DevTools');
