@@ -5,6 +5,8 @@ window.trash = require('trash');
 window.path = require('path');
 window.url = require('url');
 window.querystring = require('querystring');
+
+window.hrtime = process.hrtime;
 window.fs = require('fs');
 window.exif = require('exif');
 window.setImmediate = require('setimmediate');

@@ -160,12 +160,20 @@ class FileHandler extends Component {
     const closestFiles = getClosestNFiles(1);
     ipcRenderer.send('asynchronous-message', message.getExif(fullPath));
     closestFiles.forEach(file => {
-      if (file.fileProps) return;
+      if (file.fileProps) return this.handleWindowSize(file.fileProps);
       ipcRenderer.send('asynchronous-message', message.getProps(file.fullPath));
     });
 
-    if (currentFile.fileProps) return;
+    if (currentFile.fileProps) return this.handleWindowSize(currentFile.fileProps);
     ipcRenderer.send('asynchronous-message', message.getProps(fullPath));
+  };
+
+  handleWindowSize = ({ width, height, aspect }) => {
+    return;
+    ipcRenderer.send(
+      'asynchronous-message',
+      message.setWindowSize({ width, height, aspect })
+    );
   };
 
   setProps = async data => {
@@ -200,8 +208,11 @@ class FileHandler extends Component {
   };
 
   handleResize = () => {
+    const { updateCurrentBlob } = this.props;
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
+    updateCurrentBlob('');
+    URL.revokeObjectURL(this.blob);
 
     const { innerHeight, innerWidth } = window;
     const newMessage = {
@@ -250,10 +261,6 @@ const mapDispatchToProps = {
   updateFileList: payload => ({ type: types.UPDATE_FILELIST, payload }),
   updateScale: payload => ({ type: types.UPDATE_SCALE, payload }),
   updateBgColor: payload => ({ type: types.UPDATE_BG_COLOR, payload }),
-  updateDir: payload => ({ type: types.UPDATE_DIR, payload }),
-  updateCurrentFile: payload => ({ type: types.UPDATE_CURRENT_FILE, payload }),
-  updateFileProps: payload => ({ type: types.UPDATE_FILE_PROPS, payload }),
-  updateBase64: payload => ({ type: types.UPDATE_BASE64, payload }),
   updateCurrentBlob: payload => ({ type: types.UPDATE_CURRENT_BLOB, payload }),
 };
 

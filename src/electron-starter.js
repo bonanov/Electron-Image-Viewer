@@ -118,7 +118,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width,
     height,
-    frame: true,
+    frame: false,
     transparent: false,
     show: false,
     title: 'bonana image viewer',
@@ -271,7 +271,29 @@ function updateConfigs({ confs }) {
   conf.set('default', { ...curConf, ...confs });
 }
 
-function handleWindowSize(data) {}
+function handleWindowSize(data) {
+  const { aspect, width: width_, height: height_ } = data;
+
+  const dims = {
+    width,
+    height: width / aspect,
+  };
+
+  if (dims.width > maxWidth) {
+    dims.width = maxWidth;
+    dims.height = maxWidth / aspect;
+  }
+
+  if (dims.height > maxHeight) {
+    dims.width = maxHeight * aspect;
+    dims.height = maxHeight;
+  }
+
+  const newWidth = Math.round(dims.width);
+  const newHeight = Math.round(dims.height);
+  console.log(newWidth, newHeight);
+  mainWindow.setSize(newWidth, newHeight);
+}
 
 const mod = (n, m) => ((n % m) + m) % m;
 
@@ -360,6 +382,10 @@ ipcMain.on('asynchronous-message', (event, arg) => {
 
     case 'WRITE_IMAGE_TO_CLIPBOARD':
       clipboard.writeImage(data.path, 'clipboard');
+      break;
+
+    case 'QUIT':
+      mainWindow.hide();
       break;
 
     default:

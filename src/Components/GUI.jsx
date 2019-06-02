@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { connect } from 'react-redux';
 import Cropper from 'react-cropper';
+import setSelfAdjustingInterval from 'self-adjusting-interval';
 import * as types from '../constants/actionTypes.js';
 import PositionPanel from './PositionPanel';
 import ControlPanel from './ControlPanel';
@@ -31,6 +32,8 @@ import {
   getTrash,
   addFileToList,
 } from '../utils/getValueFromStore.js';
+
+process.hrtime = window.hrtime;
 
 const { ipcRenderer, clipboard, nativeImage, remote } = window.electron;
 const fs = remote.require('fs');
@@ -104,6 +107,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'Escape') return this.handleEscape();
     if (!ctrlKey && code === 'Enter') return this.handleEnter();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
+    if (!ctrlKey && code === 'KeyQ') return this.handleQuit();
     if (key === 'F11') {
       e.preventDefault();
       toggleFullscreen();
@@ -120,6 +124,8 @@ class GUI extends Component {
       onShuffle();
     }
   };
+
+  handleQuit = () => ipcRenderer.send('asynchronous-message', message.sendQuit());
 
   handleEnter = () => (this.props.viewModes.cropMode ? this.handleCrop() : null);
 
@@ -420,20 +426,55 @@ class GUI extends Component {
     const { viewModes } = this.props;
     const { slideShow } = viewModes;
 
-    clearTimeout(this.slideShowTimer);
-    if (!slideShow) this.handleSlideShow();
+    // clearTimeout(this.slideShowTimer);
+    if (this.slideShowTimer) this.slideShowTimer();
     toggleSlideShow();
+    // this.slideTimer.clearTimeout();
+    if (!slideShow) this.handleSlideShow();
   };
+
+  // listen = () => {
+  //   let now = 0;
+  //   const array = [];
+  //   let n = 0;
+  //   document.addEventListener('keydown', e => {
+  //     const { code } = e;
+  //     if (code !== 'Space') return;
+  //     array.push(performance.now() - now);
+  //     if (array.length > 100) array.shift();
+  //     if (n === 0) {
+  //       array.shift();
+  //       n = 1;
+  //     }
+  //     console.log(array);
+  //     console.log(array.reduce((a, b) => a + b, 0) / array.length);
+  //     now = performance.now();
+  //   });
+  // };
 
   handleSlideShow = () => {
     const { slideTimeOut } = this.props.config;
 
-    this.handleShiftImage(1);
-    clearTimeout(this.slideShowTimer);
-    this.slideShowTimer = setTimeout(() => {
-      const { slideShow } = this.props.viewModes;
-      if (slideShow) return this.handleSlideShow();
+    this.slideShowTimer = setSelfAdjustingInterval(() => {
+      const { config, viewModes } = this.props;
+      const { slideShow } = viewModes;
+
+      if (config.slideTimeOut !== slideTimeOut) {
+        this.slideShowTimer();
+        this.handleSlideShow();
+      }
+
+      // this clears interval
+      if (!slideShow) this.slideShowTimer();
+      this.handleShiftImage(1);
     }, slideTimeOut);
+
+    // this.slideShowTimer = setTimeout(() => {
+    //   const { slideShow } = this.props.viewModes;
+    //   if (slideShow) this.handleSlideShow();
+    // }, slideTimeOut);
+
+    // this.handleShiftImage(1);
   };
 
   handleSlideShowTimeOutChange = value => {

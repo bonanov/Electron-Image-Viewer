@@ -1,3 +1,5 @@
+const { ipcRenderer } = window.electron;
+
 export const getProps = fullPath => ({
   type: 'GET_PROPS',
   data: {
@@ -118,10 +120,16 @@ export const writeImageToClipboard = ({ base64 }) => ({
   },
 });
 
-export const setWindowSize = ({ height, width }) => ({
+export const setWindowSize = ({ height, width, aspect }) => ({
   type: 'SET_WINDOW_SIZE',
   data: {
     height,
     width,
+    aspect,
   },
+});
+
+export const sendQuit = () => ({
+  type: 'QUIT',
+  data: {},
 });

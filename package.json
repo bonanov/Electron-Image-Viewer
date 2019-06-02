@@ -79,6 +79,7 @@
     "react-scripts": "3.0.1",
     "react-toastify": "^5.1.0",
     "redux": "^4.0.1",
+    "self-adjusting-interval": "^1.0.0",
     "setimmediate": "^1.0.5",
     "sharp": "^0.22.1",
     "stackblur": "^1.0.0",

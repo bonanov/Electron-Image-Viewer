@@ -41,7 +41,6 @@ class Input extends Component {
 
     let newValue = Math.min(Math.max(min, value), max);
     newValue = parseFloat(newValue.toFixed(3));
-
     this.setState({ value: newValue });
     if (onChange) onChange(newValue);
   };
