@@ -107,6 +107,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
     if (!ctrlKey && code === 'KeyO') return this.handleSettingsOpen();
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
+    if (!ctrlKey && code === 'KeyC') return this.onCrop();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
     if (ctrlKey && code === 'KeyC') return clipboard.writeText(fullPath.toString());
