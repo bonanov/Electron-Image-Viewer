@@ -104,6 +104,7 @@ class GUI extends Component {
     if (!ctrlKey && key === '+') return this.handleZoom({ delta: +1 });
     if (!ctrlKey && key === '-') return this.handleZoom({ delta: -1 });
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
+    if (!ctrlKey && code === 'KeyO') return this.handleSettingsOpen();
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
