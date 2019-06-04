@@ -107,7 +107,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
     if (!ctrlKey && code === 'KeyO') return this.handleSettingsOpen();
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
-    if (!ctrlKey && code === 'KeyC') return this.onCrop();
+    if (!ctrlKey && code === 'KeyC') return this.onCropToggle();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
     if (ctrlKey && code === 'KeyC') return clipboard.writeText(fullPath.toString());
@@ -507,10 +507,11 @@ class GUI extends Component {
     });
   };
 
-  onCrop = () => {
-    const { toggleCropMode, resetImagePosition, updateScale } = this.props;
+  onCropToggle = () => {
+    const { toggleCropMode, resetImagePosition, updateScale, removePopup } = this.props;
     resetImagePosition();
     updateScale(1);
+    removePopup('info');
     toggleCropMode();
   };
 
@@ -543,7 +544,7 @@ class GUI extends Component {
           onShiftImage={this.handleShiftImage}
           onZoomChange={this.handleZoomToggle}
           onToggleShuffle={onShuffle}
-          onCrop={this.onCrop}
+          onCrop={this.onCropToggle}
         />
         {cropMode && (
           <div className="cropper-container_custom">
