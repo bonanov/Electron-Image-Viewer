@@ -63,13 +63,14 @@ class FSInterface extends Component {
   };
 
   initializeArguments = async args => {
-    const { resetFileSystem } = this.props;
-    resetFileSystem();
+    const { resetFileSystem, resetViewModes } = this.props;
     if (!args._) return;
+    resetViewModes();
+    resetFileSystem();
 
     const parsedArgs = await parseArguments(args._);
     if (!parsedArgs || !parsedArgs.list.length) return;
-
+    console.log(parsedArgs.list);
     if (args.omit || parsedArgs.list.length > 1) parsedArgs.omitDir = true;
     else parsedArgs.omitDir = false;
     this.handleFiles(parsedArgs);
@@ -238,6 +239,7 @@ const mapDispatchToProps = {
   updateCurrentLink: payload => ({ type: types.UPDATE_CURRENT_LINK, payload }),
   clearTrash: () => ({ type: types.CLEAR_TRASH }),
   resetFileSystem: () => ({ type: types.RESET_FILESYSTEM }),
+  resetViewModes: () => ({ type: types.RESET_VIEWMODES }),
   toggleShuffle: () => ({ type: types.TOGGLE_SHUFFLE }),
   setShuffle: () => ({ type: types.SET_SHUFFLE }),
   updateFileSystem: payload => ({ type: types.UPDATE_FILESYSTEM, payload }),

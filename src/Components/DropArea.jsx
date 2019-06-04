@@ -66,7 +66,7 @@ class DropArea extends Component {
     const fileList = {
       list: [],
       dir: '',
-      omitDir: true,
+      omitDir: false,
     };
 
     [...files].forEach(file => {
@@ -79,10 +79,9 @@ class DropArea extends Component {
     if (!firstFile) {
       toast.error('No supported files found');
     }
-
     fileList.dir = firstFile.dir;
     if (fileList.list.length > 1) {
-      fileList.omitDir = false;
+      fileList.omitDir = true;
     }
     onDrop(fileList);
   };

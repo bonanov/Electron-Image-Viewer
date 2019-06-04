@@ -15,6 +15,9 @@ const initialState = {
 };
 
 const viewModes = (state = initialState, action) => {
+  if (action.type === types.RESET_VIEWMODES) {
+    return { ...initialState };
+  }
   if (action.type === types.TOGGLE_CROPMODE) {
     return { ...state, cropMode: !state.cropMode };
   }
