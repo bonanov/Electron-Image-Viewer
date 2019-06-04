@@ -97,6 +97,8 @@ class GUI extends Component {
 
     if (code === 'ArrowRight' || code === 'Space') return this.handleShiftImage(1);
     if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
+    if (code === 'ArrowUp') return this.handleShiftImage(10);
+    if (code === 'ArrowDown') return this.handleShiftImage(-10);
     if (code === 'Home') return updatePosition(0);
     if (!ctrlKey && key === '+') return this.handleZoom({ delta: +1 });
     if (!ctrlKey && key === '-') return this.handleZoom({ delta: -1 });
