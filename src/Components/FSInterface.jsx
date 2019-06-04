@@ -89,7 +89,7 @@ class FSInterface extends Component {
     updateCurrentFile(list[0]);
     setShuffle(false);
     const callback = this.findPosition;
-    if (omitDir) ipcRenderer.send('asynchronous-message', message.getFileList(dir));
+    if (!omitDir) ipcRenderer.send('asynchronous-message', message.getFileList(dir));
     else this.initializeFileList(list, callback);
   };
 
