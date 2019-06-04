@@ -91,6 +91,7 @@ class GUI extends Component {
   handleKey = e => {
     const { updatePosition, onShuffle } = this.props;
     const { fileList } = getFileSystem();
+    const { fullPath } = getCurrentFile();
     const { code, ctrlKey, key } = e;
 
     const inputHasFocus = document.activeElement.tagName === 'INPUT';
@@ -108,6 +109,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
+    if (ctrlKey && code === 'KeyC') return clipboard.writeText(fullPath.toString());
     if (!ctrlKey && code === 'Escape') return this.handleEscape();
     if (!ctrlKey && code === 'Enter') return this.handleEnter();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
