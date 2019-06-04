@@ -6,18 +6,20 @@ import Settings from './Settings';
 import Info from './Info';
 import ContextMenu from './ContextMenu';
 import CropHint from './CropHint';
+import Help from './Help';
 
 const Popups = props => {
   const handlePopupClose = name => props.togglePopup(name);
   const { onUndoRemove, onDelete } = props;
   const { popups, trash, viewModes } = props;
-  const { undoRemove, settings, info, contextMenu, contextMenuPos } = popups;
+  const { undoRemove, settings, info, contextMenu, contextMenuPos, help } = popups;
   const { cropMode } = viewModes;
   return (
     <aside className="popups-container">
       {undoRemove && <UndoRemove trash={trash} onClick={onUndoRemove} />}
       {settings && <Settings onClose={() => handlePopupClose('settings')} />}
       <Info visible={info} />
+      <Help visible={help} />
       <ContextMenu visible={contextMenu} onDelete={onDelete} position={contextMenuPos} />
       {cropMode && <CropHint />}
     </aside>

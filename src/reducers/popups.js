@@ -5,6 +5,7 @@ const initialState = {
   settings: false,
   info: false,
   contextMenu: false,
+  help: false,
   contextMenuPos: {
     x: 0,
     y: 0,

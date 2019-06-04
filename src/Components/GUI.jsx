@@ -116,6 +116,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'Escape') return this.handleEscape();
     if (!ctrlKey && code === 'Enter') return this.handleEnter();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
+    if (!ctrlKey && code === 'F1') return this.props.togglePopup('help');
     if (!ctrlKey && code === 'KeyQ') return this.handleQuit();
     if (key === 'F11') {
       e.preventDefault();

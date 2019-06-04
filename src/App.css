@@ -463,7 +463,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transform: translateX(-80%);
+  transform: translateX(-100%);
   opacity: 0.0;
   
   transition: 0.1s ease-in-out;
@@ -747,3 +747,43 @@ input[type=number].custom-input-element::-webkit-outer-spin-button {
   display: none!important;
 }
 
+.help_container {
+  background: rgba(229, 229, 229, 0.7);
+  right: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 100px;
+  left: unset;
+  z-index: 101;
+  max-width: 300px;
+  width: 100%;
+  padding: 5px 15px 5px 5px;
+  /* font-family: Montserrat; */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  opacity: 0.0;
+  transition: 0.1s ease-in-out;
+}
+
+.help_container_visible {
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 101;
+}
+
+.help_container .info-item {
+  cursor: default;
+}
+
+.help_container .info-item:hover, .help_container .info-item:active {
+  opacity: 1;
+}
+
+.help_container .info-item_container {
+  height: auto;
+}
