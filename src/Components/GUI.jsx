@@ -97,13 +97,13 @@ class GUI extends Component {
 
     if (code === 'ArrowRight' || code === 'Space') return this.handleShiftImage(1);
     if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
-
     if (code === 'Home') return updatePosition(0);
     if (!ctrlKey && key === '+') return this.handleZoom({ delta: +1 });
     if (!ctrlKey && key === '-') return this.handleZoom({ delta: -1 });
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
+    if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
     if (!ctrlKey && code === 'Escape') return this.handleEscape();
     if (!ctrlKey && code === 'Enter') return this.handleEnter();
     if (!ctrlKey && code === 'KeyZ') return this.handleZoomToggle();
