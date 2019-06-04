@@ -93,7 +93,8 @@ class GUI extends Component {
     const { fileList } = getFileSystem();
     const { code, ctrlKey, key } = e;
 
-    if (document.activeElement.tagName === 'INPUT') return;
+    const inputHasFocus = document.activeElement.tagName === 'INPUT';
+    if (inputHasFocus) return;
 
     if (code === 'ArrowRight' || code === 'Space') return this.handleShiftImage(1);
     if (code === 'ArrowLeft' || code === 'Backspace') return this.handleShiftImage(-1);
