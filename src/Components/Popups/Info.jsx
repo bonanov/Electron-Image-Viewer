@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { mapKeys } from 'lodash';
+import cx from 'classnames';
 import { getCurrentFile } from '../../utils/getValueFromStore';
-
 const { clipboard } = window.electron;
 const prettyBytes = window.prettyBytes;
 const dates = window.dates;
@@ -104,7 +104,7 @@ class Info extends Component {
     const exif = fileProps && fileProps.exifData;
     const { visible } = this.props;
 
-    const classes = `popup info_container ${visible ? 'info_container_visible' : ''}`;
+    const classes = cx('popup', 'info_container', { info_container_visible: visible });
     return (
       <div className={classes}>
         {this.getBasicInfo(currentFile)}
