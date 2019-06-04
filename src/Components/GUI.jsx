@@ -91,7 +91,9 @@ class GUI extends Component {
   handleKey = e => {
     const { updatePosition, onShuffle } = this.props;
     const { fileList } = getFileSystem();
-    const { fullPath } = getCurrentFile();
+    const currentFile = getCurrentFile();
+    if (!currentFile) return;
+    const { fullPath } = currentFile;
     const { code, ctrlKey, key } = e;
 
     const inputHasFocus = document.activeElement.tagName === 'INPUT';
