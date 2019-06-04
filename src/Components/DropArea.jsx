@@ -62,18 +62,19 @@ class DropArea extends Component {
   // type: "image/jpeg"
 
   handleFiles = files => {
-    console.log(files.length);
     const { onDrop } = this.props;
     const fileList = {
       list: [],
       dir: '',
       omitDir: true,
     };
+
     [...files].forEach(file => {
       const fileObject = this.formatFileObject(file);
       if (!fileObject) return;
       fileList.list.push(fileObject);
     });
+
     const firstFile = fileList.list[0];
     if (!firstFile) {
       toast.error('No supported files found');

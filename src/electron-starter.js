@@ -137,8 +137,6 @@ function createWindow() {
       mainWindow.removeMenu();
     }
 
-    mainWindow.show();
-    initTray();
     mainWindow.on('show', initContextMenu);
     mainWindow.on('hide', initContextMenu);
   });
@@ -156,6 +154,7 @@ function createWindow() {
     });
 
   mainWindow.loadURL(startUrl);
+  initTray();
 
   mainWindow.on('minimize', () => {
     mainWindow.hide();
