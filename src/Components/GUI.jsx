@@ -21,6 +21,7 @@ import {
   formatPath,
   writeDateToDisk,
   formatFileObject,
+  getNewName,
 } from '../utils/base.js';
 import {
   getCurrentFile,
@@ -32,6 +33,8 @@ import {
   getTrash,
   addFileToList,
 } from '../utils/getValueFromStore.js';
+
+const sharp = window.sharp;
 
 process.hrtime = window.hrtime;
 
@@ -109,6 +112,7 @@ class GUI extends Component {
     if (!ctrlKey && code === 'End') return updatePosition(fileList.length - 1);
     if (!ctrlKey && code === 'KeyO') return this.handleSettingsOpen();
     if (!ctrlKey && code === 'KeyF') return toggleFullscreen();
+    if (!ctrlKey && code === 'KeyM') return this.handleMirror();
     if (!ctrlKey && code === 'KeyC') return this.onCropToggle();
     if (!ctrlKey && code === 'KeyI') return this.handleInfo();
     if ((ctrlKey && code === 'KeyR') || code === 'F5') return window.location.reload();
@@ -495,6 +499,24 @@ class GUI extends Component {
     ipcRenderer.send('asynchronous-message', message.updateConfigs(confItem));
   };
 
+  handleMirror = async () => {
+    const { currentPosition } = getFileSystem();
+    const { fullPath } = getCurrentFile();
+    const newPath = await getNewName(fullPath);
+    sharp(fullPath)
+      .flop()
+      .withMetadata()
+      .png({ compressionLevel: 5 })
+      // .toBuffer()
+      .toFile(newPath)
+      .then(async () => {
+        const file = await formatFileObject([newPath]);
+        if (!file || !file.length) return;
+        addFileToList({ file: file[0], position: currentPosition });
+      })
+      .catch(err => console.log(err));
+  };
+
   handleCrop = () => {
     if (!this.cropperEl) return;
     const { toggleCropMode } = this.props;
@@ -503,6 +525,7 @@ class GUI extends Component {
     // const dataUrl = this.cropperEl.getCroppedCanvas().toDataURL('image/jpeg');
     this.cropperEl.getCroppedCanvas().toBlob(async blob => {
       const savePath = await writeDateToDisk(fullPath, blob);
+      if (!savePath) return;
       const file = await formatFileObject([savePath]);
       if (!file || !file[0]) return;
       toggleCropMode();
@@ -591,7 +614,11 @@ class GUI extends Component {
     return (
       <React.Fragment>
         <ToastContainer />
-        <Popups onDelete={this.handleFileDelete} onUndoRemove={this.handleUndoRemove} />
+        <Popups
+          onDelete={this.handleFileDelete}
+          onMirror={this.handleMirror}
+          onUndoRemove={this.handleUndoRemove}
+        />
         {this.mainGui()}
         {this.preloader()}
       </React.Fragment>

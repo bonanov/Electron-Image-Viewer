@@ -85,7 +85,8 @@
     "sharp": "^0.22.1",
     "stackblur": "^1.0.0",
     "stackblur-canvas": "^2.2.0",
-    "trash": "^5.2.0"
+    "trash": "^5.2.0",
+    "unused-filename": "^2.1.0"
   },
   "scripts": {
     "watch-react": "react-scripts start",

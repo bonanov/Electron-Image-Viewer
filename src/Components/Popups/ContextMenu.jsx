@@ -61,6 +61,8 @@ class ContextMenu extends Component {
 
   onCopy = () => this.handleClick(this.copyToClipboard);
 
+  onMirror = () => this.handleClick(this.props.onMirror);
+
   onCrop = async () => {
     const { hideUi, resetImagePosition, updateScale, toggleCropMode } = this.props;
     hideUi();
@@ -91,6 +93,9 @@ class ContextMenu extends Component {
         </div>
         <div onClick={this.onCrop} className="context-menu-item">
           Crop image
+        </div>
+        <div onClick={this.onMirror} className="context-menu-item">
+          Mirror image
         </div>
         <div onClick={this.onDelete} className="context-menu-item context-menu-delete">
           Delete

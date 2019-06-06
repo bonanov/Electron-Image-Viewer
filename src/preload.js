@@ -5,6 +5,7 @@ window.trash = require('trash');
 window.path = require('path');
 window.url = require('url');
 window.querystring = require('querystring');
+window.unusedFilename = require('unused-filename');
 
 window.hrtime = process.hrtime;
 window.fs = require('fs');

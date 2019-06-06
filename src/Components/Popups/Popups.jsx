@@ -10,7 +10,7 @@ import Help from './Help';
 
 const Popups = props => {
   const handlePopupClose = name => props.togglePopup(name);
-  const { onUndoRemove, onDelete } = props;
+  const { onUndoRemove, onDelete, onMirror } = props;
   const { popups, trash, viewModes } = props;
   const { undoRemove, settings, info, contextMenu, contextMenuPos, help } = popups;
   const { cropMode } = viewModes;
@@ -20,7 +20,12 @@ const Popups = props => {
       {settings && <Settings onClose={() => handlePopupClose('settings')} />}
       <Info visible={info} />
       <Help visible={help} />
-      <ContextMenu visible={contextMenu} onDelete={onDelete} position={contextMenuPos} />
+      <ContextMenu
+        visible={contextMenu}
+        onMirror={onMirror}
+        onDelete={onDelete}
+        position={contextMenuPos}
+      />
       {cropMode && <CropHint />}
     </aside>
   );

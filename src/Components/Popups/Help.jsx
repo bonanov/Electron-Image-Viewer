@@ -4,6 +4,7 @@ import cx from 'classnames';
 const helpItems = [
   { shortcut: 'F1', description: 'Toggle shortucts panel' },
   { shortcut: 'C', description: 'Toggle crop mode' },
+  { shortcut: 'M', description: 'Mirror image' },
   { shortcut: 'F', description: 'Toggle fullscreen mode' },
   { shortcut: 'R', description: 'Toggle shuffle mode' },
   { shortcut: 'S', description: 'Toggle slideshow mode' },

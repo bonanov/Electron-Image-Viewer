@@ -7,6 +7,7 @@ const { argv } = remote.process;
 const { NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
 const fs = remote.require('fs');
+const unusedFilename = window.unusedFilename;
 
 export const getError = callback => {
   try {
@@ -223,29 +224,17 @@ export const destructFilePathFull = filePath => {
   };
 };
 
-export const destructToNameSuffix = name => {
-  const preSuffix = name.replace(/^(.*)\s\((\d{1,})\)$/, '$1');
-  const suffix = name.replace(/^(.*)\s\((\d{1,})\)$/, '$2');
-  if (!preSuffix || !suffix) return { preSuffix: '', suffix: NaN, err: 'not found' };
-  return { preSuffix, suffix: parseInt(suffix) };
+export const getNewName = async path_ => {
+  const currentPath = await unusedFilename(path_);
+  const { fileName, dirName, extension } = destructFilePathFull(currentPath);
+  const newPath = path.join(dirName, fileName + '.png');
+  return newPath;
 };
 
-export const writeDateToDisk = async (outPath, blob) => {
+export const writeDateToDisk = async (outPath, blob, type) => {
   if (!blob) return;
   let currentPath = outPath;
-  const { dirName: dir, fileName: file } = destructFilePathFull(currentPath);
-  currentPath = path.join(dir, file + '.png');
-  const isExist = fs.existsSync(currentPath);
-  if (isExist) {
-    let n = 0;
-    while (fs.existsSync(currentPath)) {
-      const { fileName, dirName, extension } = destructFilePathFull(currentPath);
-      const { preSuffix, suffix, err } = destructToNameSuffix(fileName);
-      if (!err) n = suffix || 0;
-      n++;
-      currentPath = path.join(dirName, `${preSuffix} (${n})${extension}`);
-    }
-  }
+  currentPath = await getNewName(outPath);
 
   const result = await new Promise(resolve => {
     const fileReader = new FileReader();

@@ -23,7 +23,7 @@ export const getExif = async image => {
 };
 
 export const blurImage = async ({ fullPath, width, height }) => {
-  const base64Prefix = 'data:image/jpeg;base64,';
+  const prefix = 'data:image/jpeg;base64,';
   const base64 = await new Promise((resolve, reject) => {
     sharp(fullPath)
       .resize(Math.round(width), height, {
@@ -38,7 +38,7 @@ export const blurImage = async ({ fullPath, width, height }) => {
       //   chromaSubsampling: '4:4:4',
       // })
       .toBuffer()
-      .then(data => resolve(base64Prefix + data.toString('base64')))
+      .then(data => resolve(prefix + data.toString('base64')))
       // eslint-disable-next-line prefer-promise-reject-errors
       .catch(err => reject(err));
   });
@@ -46,7 +46,7 @@ export const blurImage = async ({ fullPath, width, height }) => {
 };
 
 export const resizeImage = async ({ fullPath, width, height }) => {
-  const pngBase64Prefix = 'data:image/png;base64,';
+  const prefix = 'data:image/png;base64,';
   const base64 = await new Promise((resolve, reject) => {
     sharp(fullPath)
       .resize(Math.round(width), Math.round(height), {
