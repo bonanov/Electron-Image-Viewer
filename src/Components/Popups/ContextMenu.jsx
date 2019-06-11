@@ -95,7 +95,7 @@ class ContextMenu extends Component {
           Crop image
         </div>
         <div onClick={this.onMirror} className="context-menu-item">
-          Mirror image
+          Flip horizontal
         </div>
         <div onClick={this.onDelete} className="context-menu-item context-menu-delete">
           Delete

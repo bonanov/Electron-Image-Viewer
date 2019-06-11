@@ -146,7 +146,10 @@ class GUI extends Component {
   handleEscape = () => {
     const { toggleCropMode, showUi } = this.props;
     const { cropMode } = this.props.viewModes;
-    if (!cropMode) return;
+    if (!cropMode) {
+      this.handleQuit();
+      return;
+    }
     toggleCropMode();
     showUi();
   };
