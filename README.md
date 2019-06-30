@@ -9,9 +9,9 @@
 
 ### Linux
 
-Download [latest release](https://github.com/Bonanov/Electron-Image-Viewer/releases), unpack and run `./image-viewer`.
-You are going to need *graphicsmagick* installed.
-It is probably will work without it, but some features like zooming, and file info may not work correctly.
+Download [latest release](https://github.com/Bonanov/Electron-Image-Viewer/releases), unpack and run `./image-viewer`.  
+You need to have *graphicsmagick* installed.  
+It probably will work without it, but some features may not work correctly.
 
 ### macOS, Windows
 
