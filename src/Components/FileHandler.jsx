@@ -75,7 +75,7 @@ class FileHandler extends Component {
 
     updateCurrentBlob('');
     // TODO: figure out c.slideTimeOut
-    if (c.backgroundBlur && (c.slideTimeOut >= 500 || !slideShow)) this.handleBlur();
+    // if (c.backgroundBlur && (c.slideTimeOut >= 500 || !slideShow)) this.handleBlur();
     if (c.backgroundColor) this.handleColor();
     if (c.hqResize && (c.slideTimeOut >= 500 || !slideShow) && type !== 'gif') {
       this.handleResize();
@@ -212,7 +212,7 @@ class FileHandler extends Component {
     const fullPath = getCurrentFilePath();
     if (!fullPath) return;
     updateCurrentBlob('');
-    URL.revokeObjectURL(this.blob);
+    // URL.revokeObjectURL(this.blob);
 
     const { innerHeight, innerWidth } = window;
     const newMessage = {

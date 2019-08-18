@@ -67,7 +67,6 @@ body {
 
 .background-image {
   position: absolute;
-  /* transform: scale(5); */
   width: 100%;
   /* Not sure why but this thing is increases perfomance */
   backface-visibility: hidden;

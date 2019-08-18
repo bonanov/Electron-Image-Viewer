@@ -50,7 +50,7 @@ class ImageContainer extends Component {
 
     return (
       <React.Fragment>
-        {backgroundBlur && blur && this.renderBlur({ blur })}
+        {/* {backgroundBlur && blur && this.renderBlur({ blur })} */}
         {this.renderImage({ fullPath, src, handleRef, style })}
       </React.Fragment>
     );
@@ -65,9 +65,12 @@ class ImageContainer extends Component {
   renderImage = ({ src, handleRef, style }) => (
     <div ref={handleRef} className="image-container image-container-selector">
       {src && (
-        <div style={{ ...style }} className="image">
-          <img ref={ref => (this.imageEl = ref)} className="image-inner" src={src} />
-        </div>
+        <React.Fragment>
+          <img ref={ref => (this.imageEl = ref)} className="background-image" src={src} />
+          <div style={{ ...style }} className="image">
+            <img ref={ref => (this.imageEl = ref)} className="image-inner" src={src} />
+          </div>
+        </React.Fragment>
       )}
     </div>
   );

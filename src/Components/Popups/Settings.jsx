@@ -9,12 +9,12 @@ class Settings extends Component {
   constructor() {
     super();
     this.settings = [
-      { name: 'hqResize', text: 'High quality image resizing' },
-      { name: 'keepInstance', text: 'Keep process working in the background' },
-      { name: 'trayIcon', text: 'Keep tray icon' },
+      // { name: 'hqResize', text: 'High quality image resizing' },
+      // { name: 'keepInstance', text: 'Keep process working in the background' },
+      // { name: 'trayIcon', text: 'Keep tray icon' },
       { name: 'backgroundBlur', text: 'Background blur (might be slow)' },
       { name: 'backgroundColor', text: 'Background average color' },
-      { name: 'preloadImages', text: "Preload images (you don't want to turn this off)" },
+      // { name: 'preloadImages', text: "Preload images (you don't want to turn this off)" },
     ];
   }
 
