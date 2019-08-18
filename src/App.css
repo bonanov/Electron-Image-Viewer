@@ -65,6 +65,16 @@ body {
   /* transition: 0.1s background-image; */
 }
 
+.background-image {
+  position: absolute;
+  /* transform: scale(5); */
+  width: 100%;
+  /* Not sure why but this thing is increases perfomance */
+  backface-visibility: hidden;
+  filter: blur(30px);
+
+}
+
 .image-moving .image {
   transition: 0s;
 }
@@ -114,7 +124,8 @@ body {
 .control-panel-container {
   will-change: transform, opacity;
   color: #404040;
-  background: rgba(229, 229, 229, 0.7);
+  background: rgba(229, 229, 229, 0.4   );
+  backdrop-filter: saturate(250%) blur(25px);
   border-radius: 5px;
   padding: 5px;
   position: fixed;
@@ -367,7 +378,8 @@ body {
 .settings_container {
   width: 500px;
   height: 300px;
-  background: #E5E5E5;
+  background: rgba(229, 229, 229, 0.5);
+  backdrop-filter: saturate(250%) blur(25px);
   border-radius: 5px;
   display: flex;
   flex-direction: column;
@@ -448,7 +460,8 @@ body {
 }
 
 .info_container {
-  background: rgba(229, 229, 229, 0.7);
+  background: rgba(229, 229, 229, 0.5);
+  backdrop-filter: saturate(250%) blur(25px);
   left: 0;
   top: 0;
   bottom: 0;
@@ -748,7 +761,8 @@ input[type=number].custom-input-element::-webkit-outer-spin-button {
 }
 
 .help_container {
-  background: rgba(229, 229, 229, 0.7);
+  background: rgba(229, 229, 229, 0.5);
+  backdrop-filter: saturate(250%) blur(25px);
   right: 0;
   top: 0;
   bottom: 0;
