@@ -129,7 +129,7 @@
   "devDependencies": {
     "babel-eslint": "^10.0.1",
     "copy-webpack-plugin": "^5.0.3",
-    "electron": "^5.0.1",
+    "electron": "^6.0.2",
     "electron-builder": "^20.41.0",
     "electron-devtools-installer": "^2.2.4",
     "electron-installer-debian": "^1.2.0",
