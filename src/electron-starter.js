@@ -92,8 +92,8 @@ const extraWindows = [];
 // let secondWindow;
 // let thirdWindow;
 // let forthWindow;
-const width = 1280;
-const height = 720;
+const width = 1600;
+const height = 900;
 let maxWidth = 1920;
 let maxHeight = 1080;
 
@@ -152,7 +152,6 @@ function createWindow() {
       protocol: 'file:',
       slashes: true,
     });
-
   mainWindow.loadURL(startUrl);
   initTray();
 
